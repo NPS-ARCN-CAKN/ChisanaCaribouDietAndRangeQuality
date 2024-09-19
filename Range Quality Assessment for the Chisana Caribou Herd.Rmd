@@ -13,6 +13,77 @@ library(odbc)
 library(leaflet)
 connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna_dev", Database = "ChisanaVegetation")
 
+
+# Pull the vegetation dataset from the SQL Server database and write it to file for archival in NPS Data Store
+Sql = "SELECT Plot 
+, Line 
+, PointLoc 
+, TopCanopy 
+, TopCanopyScientificName 
+, TopCanopyCommonName 
+, TopCanopyLifeForm 
+, TopCanopyGrowthHabit 
+, TopCanopyGrowthHabitSub 
+, Lower1 
+, Lower1ScientificName 
+, Lower1CommonName 
+, Lower1LifeForm 
+, Lower1GrowthHabit 
+, Lower1GrowthHabitSub 
+, Lower2 
+, Lower2ScientificName 
+, Lower2CommonName 
+, Lower2LifeForm 
+, Lower2GrowthHabit 
+, Lower2GrowthHabitSub 
+, Lower3 
+, Lower3ScientificName 
+, Lower3CommonName 
+, Lower3LifeForm 
+, Lower3GrowthHabit 
+, Lower3GrowthHabitSub 
+, SoilSurface 
+, SoilSurfaceScientificName 
+, SoilSurfaceCommonName 
+, SoilSurfaceLifeForm 
+, SoilSurfaceGrowthHabit 
+, SoilSurfaceGrowthHabitSub 
+, SoilSurfaceDescription 
+, LichenHeight 
+, Ecotype 
+, Lat 
+, Lon 
+, Elev_m 
+, SlopePosition 
+, SlopeLength 
+, SlopeCrossSection 
+, ParentRock 
+, Drainage
+, AvgPrecip
+, AvgPrecipUOM
+, EcolSite
+, ParentMaterial
+, MicroRelief
+, MicroReliefSize
+, GeoMorphicDisturbance
+, EvidenceOfFrostAction
+, MaxSlope
+, EvidenceOfWind
+, WindExposureClass
+, CaribouSign
+, EvidenceOfFire
+, SlopeAsp
+, Date
+, Crew
+, VersionDate 
+FROM Dataset_VegData 
+ORDER BY Plot, Line, PointLoc"
+Data = dbGetQuery(connection,Sql)
+
+# Write the vegetation data to file
+ExportFile = paste("./VegData.csv",sep="")
+write.table(Data,file=ExportFile,quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
+
 ```
 
 # Intro
@@ -25,7 +96,6 @@ Summer forage is also an important component of caribou habitat. Low recruitment
 
 # Methods
 
-![](images/clipboard-252664524.png)
 
 # Dataset Processing Description
 
@@ -35,7 +105,6 @@ Judy et al. did vegetation point intercept on plots in the Chisana caribou range
 
 We focus on the core range of the CCH within WRST National Park and Preserve boundaries. This area forms the basin between the Wrangell, St. Elias, and Nutzotin Mountains, containing the Chisana and White Rivers and the historic town of Chisana. Study area limits were defined to include the bulk of CCH radio collar signals recorded between 1988 and 2015 (Fig. 1; J. Putera, unpublished data, 2015). The resulting area is 2795 km^2^ (1079 miles^2^ ) and contains moderate to high elevations, from 1000 - 2500 m (3281–8202 ft).
 
-![![](images/clipboard-3865551050.png)](images/clipboard-3865551050.png)
 
 Figure 1. Defining the core range of the Chisana caribou herd in northeastern WRST Park and Preserve. Points are radio collar signals recorded from 1988 to 2015 during summer or winter seasons. The core range (yellow border) was selected to include the majority of radio signals within WRST (green border).
 
@@ -47,8 +116,8 @@ Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST P
 
 ```{r, echo=FALSE,tab.cap="Table 1. Baseline vegetation monitoring plots in the range of the Chisana caribou herd. Spatial coordinates are WGS 1984."}
 
-# Get the plots into a frame
-sql = "SELECT 
+# Get the sampling plots into a frame
+Sql = "SELECT
 Plots.Plot
 ,Ecotypes.Ecotype
 , Plots.Elev_m as [Elevation (m)]
@@ -58,7 +127,12 @@ As Longitude
 FROM Plots INNER JOIN
  Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
 ORDER BY Plots.Plot, Ecotypes.Ecotype"
-Plots = dbGetQuery(connection,sql)
+Plots = dbGetQuery(connection,Sql)
+
+# Write the Plots data to file
+write.table(Plots,file="./Plots.csv",quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
+
+# Display the plots
 knitr::kable(Plots)
 ```
 
@@ -67,34 +141,19 @@ knitr::kable(Plots)
 Why only one plot in Forest?
 
 ```{r, echo=FALSE, tab.cap="Table 2. 'Table 2. Number of plots by ecotype, with mean elevation.'."}
-sql="SELECT Ecotypes.Ecotype
+
+# Display the sampling plots
+
+Sql="SELECT Ecotypes.Ecotype
 , COUNT(*) AS n
 , AVG(Plots.Elev_m) AS [Mean elevation (m)]
 FROM Plots INNER JOIN
  Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
+WHERE Plots.EstablishDate IS NOT NULL
 GROUP BY Ecotypes.Ecotype
 ORDER BY n DESC"
-dbGetQuery(connection,sql)
-
-sqldf("SELECT Ecotypes.Ecotype
-, COUNT(*) AS n
-, AVG(Plots.Elev_m) AS [Mean elevation (m)]
-FROM Plots INNER JOIN
- Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
-GROUP BY Ecotypes.Ecotype
-ORDER BY n DESC")
-
-```
-
-## Mean plot elevation by ecotype
-
-```{r, echo=FALSE, fig.cap="Figure 1. Mean plot elevation by ecotype."}
-ggplot(Plots) +
-  geom_boxplot(aes(x=Ecotype,y=`Elevation (m)`)) +
-  theme_minimal() +
-  # Make X axis labels vertical
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-  ggtitle('Mean plot elevation (m) by ecotype')
+dbGetQuery(connection,Sql)
+knitr::kable(sqldf("SELECT Ecotype, COUNT(DISTINCT Plot) AS Plots, AVG(Elev_m) AS [Mean elevation (m)] FROM Data GROUP BY Ecotype ORDER BY Plots DESC"))
 
 
 ```
@@ -109,53 +168,91 @@ A map of the plots is shown below:
 leaflet() %>%
   
   # Set the view and zoom levels
-  setView(lng = mean(Plots$Lon), lat = mean(Plots$Lat), zoom = 9) %>%
+  setView(lng = mean(Plots$Longitude), lat = mean(Plots$Latitude), zoom = 9) %>%
   
   # Add WMS tiles
   addWMSTiles('https://basemap.nationalmap.gov:443/arcgis/services/USGSTopo/MapServer/WmsServer',layers = "0",options = WMSTileOptions(format = "image/png"))  %>%
 
   # Add the points
-  addCircleMarkers(lng = Plots$Lon, lat = Plots$Lat, popup = Plots$Plot) %>%
+  addCircleMarkers(lng = Plots$Longitude, lat = Plots$Latitude, popup = Plots$Plot, color=) %>%
  
   # Label the units 
-  addLabelOnlyMarkers(~Lon,~Lat, label = ~Plot, data = Plots,  labelOptions = labelOptions(noHide = TRUE))
+  addLabelOnlyMarkers(~Longitude,~Latitude, label = ~Plot, data = Plots,  labelOptions = labelOptions(noHide = TRUE))
 
 ```
 
 # Vegetation Cover
 
-```{r, echo=FALSE,fig.cap="Figure 1. Percent cover by taxa in the range of the Chisana caribou herd."}
-
-# Get the dataset from the database
-dbGetQuery(connection,"SELECT 
-ScientificName as Taxa
---, TopCanopyIntercepts
---, TotalHitsPossible
-, PctCover_TopCanopy as [Foliar % cover]
---, GrowthHabitSub, SpeciesCode
-FROM            Summary_VegData_PercentCover
-WHERE NOT GrowthHabitSub IN ('Lichen Crust','Moss')
+```{r, echo=FALSE}
+# Retrieve the percent cover calculations from the database into a data frame
+CoverData = dbGetQuery(connection,"SELECT [ScientificName]
+,[TopCanopyIntercepts]
+,[Lower1Intercepts]
+,[Lower2Intercepts]
+,[Lower3Intercepts]
+,[LowerInterceptsCombined]
+,[SoilSurfaceIntercepts]
+,[TotalHitsPossible]
+,[PctCover_TopCanopy]
+,[PctCover_Lower1]
+,[PctCover_Lower2]
+,[PctCover_Lower3]
+,[PctCover_LowerInterceptsCombined]
+,[PctCover_SoilSurface]
+,[SpeciesCode]
+,[GrowthHabitSub]
+FROM [ChisanaVegetation].[dbo].[Summary_VegData_PercentCover]
+--WHERE GrowthHabitSub <> 'Abiotic' -- Omit cover of litter, rock, soil, water, etc.
 ORDER BY PctCover_TopCanopy DESC")
 
-
-# Plot percent cover by growth habit
-# ggplot(CoverData) +
-#   geom_col(aes(x=1,y=`Foliar % cover`,fill=ScientificName),position='fill') +
-#   theme_minimal() +
-#   # Make X axis labels vertical
-#   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+# Write the vegetation percent cover data to file
+ExportFile = paste("./Cover.csv",sep="")
+write.table(CoverData,file=ExportFile,quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
 
 ```
 
-```{r, echo=FALSE}
-# Stats for the previous figure
-# knitr::kable(sqldf("select GrowthHabitSub
-#   , avg(PercentCover) as Mean
-#   , min(PercentCover) as Min
-#   , max(PercentCover) as Max
-#   , stdev(PercentCover) as SD
-#   , count(PercentCover) as n
-#   FROM CoverData group by GrowthHabitSub order by Mean DESC"),caption='Table 1. Mean percent cover by plant growth habit over the Chisana caribou herd range ')
+## Foliar cover
+
+```{r, echo=FALSE,tab.cap="Figure 1. Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%."}
+sqldf("SELECT ScientificName,PctCover_TopCanopy as [Foliar % cover] 
+FROM CoverData 
+WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+And PctCover_TopCanopy > 1
+AND PctCover_TopCanopy > 0
+ORDER BY PctCover_TopCanopy DESC")
+```
+
+## Mid-story Cover
+
+```{r, echo=FALSE,tab.cap="Figure 1. Percent mid-story cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%."}
+sqldf("SELECT ScientificName,PctCover_LowerInterceptsCombined as [Mid-story % cover] 
+FROM CoverData 
+WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+AND PctCover_LowerInterceptsCombined > 0.1
+ORDER BY PctCover_LowerInterceptsCombined DESC")
+```
+
+## Basal Cover
+
+```{r, echo=FALSE,tab.cap="Table x. Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%."}
+
+sqldf("SELECT ScientificName,PctCover_SoilSurface as [Basal % cover] 
+FROM CoverData 
+WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+AND PctCover_SoilSurface > 0.1
+ORDER BY PctCover_SoilSurface DESC")
+
+```
+
+## Moss And Lichen Cover
+
+```{r, echo=FALSE,tab.cap="Table x. Percent ground cover of moss and lichen in the range of the Chisana caribou herd."}
+
+sqldf("SELECT ScientificName,PctCover_SoilSurface as [Basal % cover] 
+FROM CoverData 
+WHERE GrowthHabitSub IN ('Moss','Lichen Crust') And (GrowthHabitSub <> 'Abiotic')
+AND PctCover_SoilSurface > 0
+ORDER BY PctCover_SoilSurface DESC")
 
 ```
 
@@ -165,11 +262,11 @@ Next, I generated the same chart but parsed the results by ecotype (Jorgenson). 
 
 ```{r, echo=FALSE,fig.cap="Figure 2. Percent cover by plant growth habit and Jorgenson ecotype."}
 # Plot the percent cover by ecotype
-ggplot(CoverData) +
-  geom_col(aes(x=Ecotype,y=PercentCover,fill=GrowthHabitSub),position='fill') +
-  theme_minimal() +
-  # Make X axis labels vertical
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+# ggplot(CoverData) +
+#   geom_col(aes(x=Ecotype,y=PercentCover,fill=GrowthHabitSub),position='fill') +
+#   theme_minimal() +
+#   # Make X axis labels vertical
+#   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
 
 ```
 
@@ -223,16 +320,16 @@ knitr::kable(Plots,caption='Table ?. Sampling plots.')
 # Database table and column descriptions
 
 ```{r, echo=FALSE}
-sql = "select distinct [Table],TableDescription from DatabaseColumnsDescriptions where left([table],1) <> 'z' and not [table] in ('sysdiagrams','DeliverablesSchedule','LifeFormCoverMeans')"
-knitr::kable(dbGetQuery(connection,sql),caption='Table ?. Database table descriptions.')
+Sql = "select distinct [Table],TableDescription from DatabaseColumnsDescriptions where left([table],1) <> 'z' and not [table] in ('sysdiagrams','DeliverablesSchedule','LifeFormCoverMeans')"
+knitr::kable(dbGetQuery(connection,Sql),caption='Table ?. Database table descriptions.')
 ```
 
 ```{r, echo=FALSE}
-sql = "SELECT        [Table], [Column], ColumnDescription
+Sql = "SELECT        [Table], [Column], ColumnDescription
 FROM            DatabaseColumnsDescriptions
 where left([table],1) <> 'z' and not [table] in ('sysdiagrams','DeliverablesSchedule','LifeFormCoverMeans')
 ORDER BY [Table], [Column]"
-knitr::kable(dbGetQuery(connection,sql),caption='Table ?. Database columns descriptions.')
+knitr::kable(dbGetQuery(connection,Sql),caption='Table ?. Database columns descriptions.')
 
 ```
 
@@ -256,9 +353,9 @@ ORDER BY Plot, Line, PointLoc")
 ```{r, echo=FALSE}
 GetPlotSummary = function(Plot){
   cat("## ",Plot,"\n\n")
-  sql = paste("SELECT * FROM Summary_VegData_LichenHeightByPlot WHERE Plot='",Plot,"'",sep="")
-  cat("## ",sql,"\n\n")
-  print(dbGetQuery(connection,sql))
+  Sql = paste("SELECT * FROM Summary_VegData_LichenHeightByPlot WHERE Plot='",Plot,"'",sep="")
+  cat("## ",Sql,"\n\n")
+  print(dbGetQuery(connection,Sql))
   cat("\n\n")
 }
 
