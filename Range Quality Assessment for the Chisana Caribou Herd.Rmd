@@ -1,92 +1,311 @@
 ---
-title: "A Range Quality Assessment for the Chisana Caribou Herd, Alaska"
-author: "SDMiller"
-date: "`r Sys.Date()`"
-output: html_document
+title: ""
+author: ""
+date: ""
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float: true
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, echo=FALSE}
+
+# Global NA to blank
+options(knitr.kable.NA = '')
 knitr::opts_chunk$set(echo = FALSE)
+
+# Libraries
 library(sqldf)
 library(tidyverse)
 library(odbc)
 library(leaflet)
-connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna_dev", Database = "ChisanaVegetation")
 
+# Paths to CAKN drive data and Data Store Project Reference
+# J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment
+# https://irma.nps.gov/DataStore/Reference/Profile/2306144
 
-# Pull the vegetation dataset from the SQL Server database and write it to file for archival in NPS Data Store
-Sql = "SELECT Plot 
-, Line 
-, PointLoc 
-, TopCanopy 
-, TopCanopyScientificName 
-, TopCanopyCommonName 
-, TopCanopyLifeForm 
-, TopCanopyGrowthHabit 
-, TopCanopyGrowthHabitSub 
-, Lower1 
-, Lower1ScientificName 
-, Lower1CommonName 
-, Lower1LifeForm 
-, Lower1GrowthHabit 
-, Lower1GrowthHabitSub 
-, Lower2 
-, Lower2ScientificName 
-, Lower2CommonName 
-, Lower2LifeForm 
-, Lower2GrowthHabit 
-, Lower2GrowthHabitSub 
-, Lower3 
-, Lower3ScientificName 
-, Lower3CommonName 
-, Lower3LifeForm 
-, Lower3GrowthHabit 
-, Lower3GrowthHabitSub 
-, SoilSurface 
-, SoilSurfaceScientificName 
-, SoilSurfaceCommonName 
-, SoilSurfaceLifeForm 
-, SoilSurfaceGrowthHabit 
-, SoilSurfaceGrowthHabitSub 
-, SoilSurfaceDescription 
-, LichenHeight 
-, Ecotype 
-, Lat 
-, Lon 
-, Elev_m 
-, SlopePosition 
-, SlopeLength 
-, SlopeCrossSection 
-, ParentRock 
-, Drainage
-, AvgPrecip
-, AvgPrecipUOM
-, EcolSite
-, ParentMaterial
-, MicroRelief
-, MicroReliefSize
-, GeoMorphicDisturbance
-, EvidenceOfFrostAction
-, MaxSlope
-, EvidenceOfWind
-, WindExposureClass
-, CaribouSign
-, EvidenceOfFire
-, SlopeAsp
-, Date
-, Crew
-, VersionDate 
-FROM Dataset_VegData 
-ORDER BY Plot, Line, PointLoc"
-Data = dbGetQuery(connection,Sql)
-
-# Write the vegetation data to file
-ExportFile = paste("./VegData.csv",sep="")
-write.table(Data,file=ExportFile,quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
+# Directory where project deliverables are stored (authoritative copies will eventually go in Data Store)
+DeliverablesDirectory = "J:/Monitoring/Caribou/WRST/Projects/Chisana Caribou Habitat Assessment/Data/Deliverables/"
 
 ```
 
-# Intro
+
+```{r, echo=FALSE}
+# This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
+
+# Database connection 
+connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna_dev", Database = "ChisanaVegetation")
+
+# Function to Write a data frame to a file in the deliverables directory. This will be used as data is pulled from the database and written to files for archival in Data Store
+WriteDataFrameToFile = function(DataFrame,Filename){
+  ExportFile = paste(DeliverablesDirectory,Filename,sep="")
+  # Disabled until needed
+  write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
+}
+
+
+
+
+# Write the vegetation dataset to file
+# ----------------------------------------------------------------------------
+# Sql = "SELECT Plot 
+# , Line 
+# , PointLoc 
+# , TopCanopy 
+# , TopCanopyScientificName 
+# , TopCanopyCommonName 
+# , TopCanopyLifeForm 
+# , TopCanopyGrowthHabit 
+# , TopCanopyGrowthHabitSub 
+# , Lower1 
+# , Lower1ScientificName 
+# , Lower1CommonName 
+# , Lower1LifeForm 
+# , Lower1GrowthHabit 
+# , Lower1GrowthHabitSub 
+# , Lower2 
+# , Lower2ScientificName 
+# , Lower2CommonName 
+# , Lower2LifeForm 
+# , Lower2GrowthHabit 
+# , Lower2GrowthHabitSub 
+# , Lower3 
+# , Lower3ScientificName 
+# , Lower3CommonName 
+# , Lower3LifeForm 
+# , Lower3GrowthHabit 
+# , Lower3GrowthHabitSub 
+# , SoilSurface 
+# , SoilSurfaceScientificName 
+# , SoilSurfaceCommonName 
+# , SoilSurfaceLifeForm 
+# , SoilSurfaceGrowthHabit 
+# , SoilSurfaceGrowthHabitSub 
+# , SoilSurfaceDescription 
+# , LichenHeight 
+# , Ecotype 
+# , Lat 
+# , Lon 
+# , Elev_m 
+# , SlopePosition 
+# , SlopeLength 
+# , SlopeCrossSection 
+# , ParentRock 
+# , Drainage
+# , AvgPrecip
+# , AvgPrecipUOM
+# , EcolSite
+# , ParentMaterial
+# , MicroRelief
+# , MicroReliefSize
+# , GeoMorphicDisturbance
+# , EvidenceOfFrostAction
+# , MaxSlope
+# , EvidenceOfWind
+# , WindExposureClass
+# , CaribouSign
+# , EvidenceOfFire
+# , SlopeAsp
+# , Date
+# , Crew
+# , VersionDate 
+# FROM Dataset_VegData 
+# ORDER BY Plot, Line, PointLoc"
+#Dataset_VegData = dbGetQuery(connection,Sql)
+
+#Write the vegetation data to file
+#ExportFile = paste(DeliverablesDirectory,"CV-10 Certified Chisana Range Vegetation Dataset ",Sys.Date(),".csv",sep="")
+#write.table(Data,file=ExportFile,quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
+#Filename = paste("CV-10 Chisana Range Vegetation Dataset.csv",sep="")
+#WriteDataFrameToFile(Dataset_VegData,Filename)
+ 
+# Get metadata for the dataset above
+#Metadata = dbGetQuery(connection,"SELECT [Column],[Definition] FROM Dataset_VegData_Metadata")
+#MetadataFilename = paste("CV-10 Chisana Range Vegetation Dataset ",Sys.Date()," Metadata - Column Descriptions.csv",sep="")
+#WriteDataFrameToFile(Metadata,MetadataFilename)
+
+
+
+
+
+# Write the sampling plots dataset to file
+# ----------------------------------------------------------------------------
+# Plots = dbGetQuery(connection,"SELECT  Plots.Plot
+# , Ecotypes.Ecotype
+# , Plots.EstablishDate
+# , Plots.Crew
+# , Plots.Elev_m
+# , Plots.Lat
+# as Latitude
+# , Plots.Lon as Longitude
+# , Plots.NTransectLitterType
+# , Plots.NTransectLitterDepth
+# , Plots.SETransectLitterType
+# , Plots.SETransectLitterDepth
+# , Plots.SWTransectLitterType
+# , Plots.SWTransectLitterDepth
+# , Plots.CaribouSign
+# , Plots.SlopePosition
+# , Plots.SlopeCrossSection
+# , Plots.Drainage
+# , Plots.MicroRelief
+# , Plots.MicroReliefSize
+# , Plots.ParentRock
+# , Plots.ParentMaterial
+# , Plots.GeoMorphicDisturbance
+# , Plots.EvidenceOfFrostAction
+# , Plots.EvidenceOfFire
+# , Plots.EvidenceOfWind
+# , Plots.WindExposureClass
+# , Plots.SlopeLength
+# , Plots.AvgPrecip
+# , Plots.AvgPrecipUOM
+# , Plots.EcolSite
+# , Plots.MaxSlope
+# , Plots.SlopeAsp
+# , Plots.Notes
+# , Plots.EcotypeID
+# FROM Plots 
+# INNER JOIN Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
+# WHERE (NOT (Plots.EstablishDate IS NULL)) -- Exclude plots that have not yet been surveyed.
+# ORDER BY Plots.Plot")
+
+# Write the sampling plots to file
+#Filename = paste("CV-10 Plots.csv",sep="")
+#WriteDataFrameToFile(Plots,Filename)
+
+
+
+
+# Write the ecotypes dataset to file
+# ----------------------------------------------------------------------------
+#Ecotypes = dbGetQuery(connection,"SELECT Ecotype, DistinguishingFeatures, Cover, EcotypeID FROM Ecotypes ORDER BY Ecotype")
+#Filename = paste("CV-10 Ecotypes.csv",sep="")
+#WriteDataFrameToFile(Ecotypes,Filename)
+
+
+
+
+
+# Write the species list dataset to file
+# ----------------------------------------------------------------------------
+#SpeciesList = dbGetQuery(connection,"SELECT [Family]
+#       ,[Genus]
+#       ,[Species]
+#       ,[ScientificName]
+#       ,[CommonName]
+#       ,[LifeForm]
+#       ,[GrowthHabit]
+#       ,[GrowthHabitSub]
+#       ,[synonymOf]
+#       ,[GrowthHabitCode]
+#       ,[Duration]
+#       ,[Stabilizing]
+#       ,[Invasive]
+#       ,[Notes]
+#       ,[SpeciesCode]
+#   FROM [ChisanaVegetation].[dbo].[SpeciesList] 
+#   ORDER BY ScientificName")
+# Filename = paste("CV-10 Species List.csv",sep="")
+#WriteDataFrameToFile(SpeciesList,Filename)
+
+
+
+
+# Write the deliverables schedule to file
+# ----------------------------------------------------------------------------
+#DeliverablesSchedule = dbGetQuery(connection,"SELECT * FROM DeliverablesSchedule ORDER BY DeliverableID")
+# Write the deliverables schedule plots to file
+#Filename = paste("C-00 Deliverables Schedule - Chisana Vegetation Project.csv",sep="")
+#WriteDataFrameToFile(DeliverablesSchedule,Filename)
+
+
+
+
+# Write the fecal pellet dataset to file
+# ----------------------------------------------------------------------------
+
+# Notes on data processing steps to get to a good pellet dataset:
+# The lab shipped a file to JAP (Putera 34 results.xlsx). The data was good in a pivoted, wide format that was untidy. 
+# I cleaned it (Putera 34 results Copy.xlsx) and reformatted into a long and tidy (2015 Chisana Caribou Fecal Pellet Data.xlsx) format and imported it into the database (inpyugamsvm01\nuna_dev:ChisanaVeg).
+
+# There were also a number of geodatabases containing the pellet collection locations. I merged these into a single file, CP-07 Fecal pellet collections spatial dataset.csv and imported them into the database.
+# From there I joined the fecal composition data with the pellet collection locations joining on Sample and exported a pellet composition dataset with spatial locations for upload to Data Store: CP-05 Chisana Caribou Fecal Pellet Composition Dataset.csv; in the database this dataset is the view Dataset_FecalPellets).
+
+# Get the fecal pellet dataset
+# Sql = "SELECT  Sample, Form, Plant, PctComposition, Date, Year, Month, Lat, Lon, Elevation_m, Comment
+# FROM Dataset_FecalPellets
+# ORDER BY Sample, Form, Plant"
+# PelletData = dbGetQuery(connection,Sql)
+# Filename = paste("CP-05 Fecal pellet dataset.csv",sep="")
+# WriteDataFrameToFile(PelletData,Filename)
+
+```
+
+```{r, echo=FALSE}
+# Read in the Chisana vegetation dataset
+Dataset_VegData = read.csv(paste(DeliverablesDirectory,"CV-10 Chisana Range Vegetation Dataset.csv",sep=""),header=TRUE)
+
+# Read in the sampling plots dataset
+Plots = read.csv(paste(DeliverablesDirectory,"CV-10 Plots.csv",sep=""),header=TRUE)
+
+# Read in the ecotypes dataset
+Ecotypes  = read.csv(paste(DeliverablesDirectory,"CV-10 Ecotypes.csv",sep=""),header=TRUE)
+
+# Read in the fecal pellet dataset
+PelletData  = read.csv(paste(DeliverablesDirectory,"CP-05 Fecal pellet dataset.csv",sep=""),header=TRUE)
+
+# Read in the species list and species code abbreviations
+SpeciesList  = read.csv(paste(DeliverablesDirectory,"CV-10 Species List.csv",sep=""),header=TRUE)
+
+```
+
+# Habitat Condition and Diet of the Chisana Caribou Herd, Alaska
+
+Authors, etc.
+
+## Wrangell-St. Elias National Park and Preserve
+
+# ABSTRACT
+
+The Chisana caribou herd is a small international woodland caribou (Rangifer tarandus caribou) herd that ranges across the Yukon-Alaska border. In Alaska, the herd ranges predominately within Wrangell-St. Elias National Park & Preserve (WRST).  After a population decline in the 1990’s, the herd was listed as a “Specially Protected” population under Yukon’s Wildlife Act and is one of 36 herds comprising the Northern Mountain Caribou population designated a species of “Special Concern” in Yukon. All harvest of this herd ceased in 1994 and by 2003 an unprecedented and expensive 4-year captive calf rearing program was initiated in Yukon that likely stabilized the herd. The herd is currently managed under a multi-agency, international management plan.  Limited diet analysis and anecdotal information suggests that poor quality habitat and nutrient-limited food occur within the herd’s range. Horse grazing in the area may also be affecting caribou habitat. This proposal seeks to address an important action item in the management plan which is to increase knowledge of the diet and forage habitat within the herd range.
+
+# Introduction
+
+## Intro Putera
+
+The Chisana caribou herd is a small international herd that ranges across the Yukon-Alaska border north of the St. Elias Mountain Range.
+
+The herd’s calving and summer range is predominantly within Wrangell-St. Elias National Park & Preserve (WRST) in Alaska.
+
+After a serious population decline in the 1990’s, the herd was listed as a “Specially Protected” population in 2002 under Yukon’s Wildlife Act and is one of 36 herds designated a species of “Special Concern” under Yukon’s federal Species at Risk Act (SARA).
+
+The herd is managed under an international, multi-agency Chisana caribou herd working group. The Chisana caribou herd management plan identifies a number of objectives to be cooperatively pursued by the working group agencies. One objective is to increase current knowledge of the forage habitat and Chisana caribou diet within the herd’s range to better understand whether it is a contributing factor limiting population size.
+
+The region is thought to have a very high habitat composition of moss and has been anecdotally described as very poor caribou habitat (B. Collins, pers. comm.).
+
+Caribou diet composition estimated from microhistological fecal analysis during March and June in 1994 and 1995 and during March 2000 and 2001 (Lenart 1997, Farnell and Gardner 2002) seems to support this observation.
+
+Most notably, average lichen composition was 50% in late winter during 1994-95 and dropped to 30% in 2000-01.
+
+Lichens have been shown to comprise over 50% of the winter diet of caribou herds in Alaska (Boertje 1990, Joly et al. 2007, Russel et al. 1993) and of woodland caribou in Yukon (Fischer and Gates 2005).
+
+Average percent composition of moss was high (24%) during winter 1994-95 compared to other studies ranging from 10 – 15% moss, and increased to an average of 53% moss composition in 2000-01.
+
+The winter diets of 13 Yukon woodland caribou herds sampled (n=95 samples) between 1981 and 2001 were predominantly lichen (74.94%) while moss (3.57%) made up only a minor component of these diets (Farnell and Gardner 2002).
+
+The high proportion of moss raises questions about the adequacy of winter forage quality and winter range condition for the herd because mosses have extremely low nutritional value and digestibility compared to lichens which are energy rich, highly palatable, and easily digested.
+
+Poor winter forage condition and availability of lichens can affect caribou body condition, fetal growth, and calf birth and growth rates (Parker et al. 2005).
+
+Poor summer forage condition can lower female conception rates through failure to regain sufficient body mass lost the previous winter.
+
+Several climate change predictions, if realized, have the potential to negatively affect caribou habitat and forage. Lichens depend on atmospheric moisture and nutrients making them vulnerable to summer warming and drying resulting in decreased growth rates. Shrubs are expected to increase with climate warming (Walker et al. 2006), and several studies indicate that shrub expansion is already occurring in Arctic and sub-Arctic Alaska (Jandt et al. 2007, Sturm et al. 2001). Shrubs and other vascular plant species compete with lichens for sunlight, ground surface substrate, and can alter snow-melt patterns that favor even more shrub growth. Increased shrubs on the landscape in conjunction with warmer temperatures, could increase fire frequency (Higuera et al. 2008). Graminoids (grasses and sedges) are also predicted to increase with a warming climate (Chapin et al. 1995; Walker et al. 2006). Although graminoids are part of the summer diet of caribou, lichen and graminoid cover are negatively correlated (Holt et al. 2008). If Chisana caribou habitat is currently considered poor, then climate induced changes may exacerbate the situation and negatively affect herd stability or growth.
+
+The objectives of this project are to 1) evaluate caribou forage habitat through vegetation sampling and 2) to examine diets of caribou through microhistological fecal sampling.
+
+## Intro Merkhofer
 
 The Chisana Caribou Herd (CCH) is a small herd of woodland caribou located in northeastern Wrangell St. Elias (WRST) National Park and Preserve in Alaska and the Tetlin National Wildlife Refuge in the Yukon. During the early 1990s, many caribou herds in interior Alaska experienced population declines of varying severity (Valkenburg et al., 1996). From 1989 to 2001, the CCH population dropped from an estimated 1800 to 400 individuals (R. Farnell, unpublished data). The CCH became listed as a “Specially Protected” population in 2002 under the Yukon’s Federal Species at Risk Act. After the implementation of a captive rearing program and the development of an international, multiagency management plan, the CCH population is now stable and open to subsistence hunting. However, the current population is significantly below pre-decline levels. Several factors most likely contributed to the CCH population decline including predation, low recruitment, and poor habitat.
 
@@ -96,77 +315,117 @@ Summer forage is also an important component of caribou habitat. Low recruitment
 
 # Methods
 
-## Vegetation Cover
-
-
-
-## Lichen Mat Thickness and Biomass
-
-We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species: 
-
-B=1135.6T
-
-where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha).
-
-
-# Dataset Processing Description
-
-Judy et al. did vegetation point intercept on plots in the Chisana caribou range, recording vegetation species contacted every half meter per line. This resulted in 40 intercepts per line X 3 lines = 120 intercepts per plot. They recorded intercepts at varying depths of vegetation from the canopy down to the soil surface. I added up all the intercepts on the line by species and divided by the total number of intercepts to arrive at a proportion of total hits by species. Hopefully this is as intended.
-
-
-# Study Area
+## Study Area
 
 We focus on the core range of the CCH within WRST National Park and Preserve boundaries. This area forms the basin between the Wrangell, St. Elias, and Nutzotin Mountains, containing the Chisana and White Rivers and the historic town of Chisana. Study area limits were defined to include the bulk of CCH radio collar signals recorded between 1988 and 2015 (Fig. 1; J. Putera, unpublished data, 2015). The resulting area is 2795 km^2^ (1079 miles^2^ ) and contains moderate to high elevations, from 1000 - 2500 m (3281–8202 ft).
 
+## Vegetation Cover
+
+We chose to proportionally allocate sampling sites to six major ecotypes within the study area (Table 1). Major ecotypes were developed by consolidating the detailed ecotypes mapped in WRST by Jorgenson et al. (2008) using satellite imagery. We grouped Jorgenson et al. ecotypes into groups based on the similarity of their definitions and geographic size (Table 1; Fig. 2). We included all ecotypes except for glaciated barrens. In our study region, the three most common ecotypes by percent cover are Alpine Dwarf Shrub/Barrens (28.1%), Subalpine Wood/Shrub (28.1%), and Alpine Sedge-Dwarf Shrub (24.3%). Riverine, Alpine Meadow, and Forest ecotypes make up the remaining 19.4% of the region.
 
 Figure 1. Defining the core range of the Chisana caribou herd in northeastern WRST Park and Preserve. Points are radio collar signals recorded from 1988 to 2015 during summer or winter seasons. The core range (yellow border) was selected to include the majority of radio signals within WRST (green border).
 
 Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST Park and Preserve (Table 1). Map based on ecotype landcover developed by Jorgenson et al. (2008).
 
-## Plots
 
-33 plots total
+We generated 56 random points for site locations within the Chisana caribou herd range. We included a 3000 m buffer between sites to ensure an even geographic distribution throughout the study area (geographic locations of sites are listed in Appendix A). Points that fell within rivers were moved to the nearest accessible riverine ecotype and points on excessively steep terrain were eliminated. We re-assigned ecotypes after field data collection using the formal WSRT ecotype classification key (summarized in Table 1; Jorgenson et al., 2008). We visited 23 sites in July, 2015 and 10 sites in July, 2016. Sites were accessed by helicopter or foot using a Trimble or Garmin GPS for navigation (Fig. 3). Permanent plots were established at all sites except those falling with a proposed Archeological District around Wiki Peak. Permanent plots were marked with a 60 cm-long rebar located at plot centers. At each site, we described physical landscape characteristics such as slope position, drainage, and geomorphic disturbance. We recorded vegetation along three 20 m-long transects oriented at 0, 120, and 240° from the plot center. Each transect was photographed and measured for slope. Transects were systematically sampled at 50 cm intervals using the line-point intercept method. At each point, we recorded all intercepted overstory and understory taxa, soil surface cover, and lichen height. Lichen height was measured using a 3 mm-wide metal skewer inserted into the base of the lichen mat (Arseneault et al., 1997; Moen et al. 2007; Collins et al., 2010). We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present. Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss (See Appendix B for detailed field measurement protocol).
 
-```{r, echo=FALSE,tab.cap="Table 1. Baseline vegetation monitoring plots in the range of the Chisana caribou herd. Spatial coordinates are WGS 1984."}
 
-# Get the sampling plots into a frame
-Sql = "SELECT
-Plots.Plot
-,Ecotypes.Ecotype
-, Plots.Elev_m as [Elevation (m)]
-, Plots.Lat as Latitude
-, Plots.Lon
-As Longitude
-FROM Plots INNER JOIN
- Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
-ORDER BY Plots.Plot, Ecotypes.Ecotype"
-Plots = dbGetQuery(connection,Sql)
 
-# Write the Plots data to file
-write.table(Plots,file="./Plots.csv",quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
+We identified taxa to the species or genus-level. We considered forage lichen as the genera Cladina, Cladonia (excluding species with cup-shaped podetia), Cetraria (excluding C. richardsonii), and Stereocaulon, following Collins et al. (2011). We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area.
 
-# Display the plots
-knitr::kable(Plots)
+
+
+```{r, include=TRUE}
+
+# NOTES: It appears that Merkhofer took Jorgenson et al. 2008's landcover classification and merged various subecotypes together into larger ecotypes. The Major ecotype column in Table 1, below, is Merkhofer's ecotype derived from the 'Included detailed ecotypes' which come from Jorgenson.
+
+# Merkhofer documented her GIS work well in \\inpyugamsstor00\Primary Datapool\I&M\CAKN\CAKN2\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\Chisana Vegetation Sampling\)
+
+# Merkhofer's steps as I can reproduce them:
+
+# 1. She loaded Jorgenson's landcover into a geodatabase: J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\GIS\ChisanaCaribouHabitat.gdb as WRSTEcotypes2008Chisana
+
+# 2. She combined various cover classes into larger major ecotypes and added a SamplingGroup column (example SWB corresponding to Subalpine Wood/Shrub)
+
+# 3. These merged major ecotypes became a feature class Ecotypes_in_one_shapefile. This layer is what is shown in Figure 2 of the Merkhofer, 2015 report
+
+# 4. She then chose potential veg plot locations in the major ecotypes for locating sampling plots (Chisana_Veg_Sampling_Points in the geodatabase, APPENDIX A. RANDOM SITE LOCATIONS AND STUDY STATUS in her report)
+
+
 ```
+
+## Ecotypes
+
+Table X. Ecotypes of Chisana caribou herd range, ranked by percent cover.
+
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+|       | **Major ecotype**          | **Included detailed ecotypes\*** | **Distinguishing features**                                                                                                                  | **Landcover** |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 1     | Alpine Dwarf-Shrub/Barrens | Alpine Dryas Dwarf Shrub         | *Dryas* spp. and other evergreen dwarf shrubs dominant, trees or tall shrubs absent, and rare graminoids; occurs at high elevations          | 28.1%         |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Alpine Barrens                   |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Alpine Ericaeous Dwarf Shrub     |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 2     | Subalpine Wood/Shrub       | Subalpine Willow-Birch Shrub     | Characterized by tall (\> 0.2 m) deciduous shrubs; few sedges and grasses; tree cover \< 20%                                                 | 28.1%         |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Subalpine Spruce Woodland        |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 3     | Alpine Sedge-Dwarf Shrub   | Alpine Sedge-Dwarf Willow Meadow | Deciduous shrubs dominant, but with lower frequencies than in ecotype 2; sedges co-dominant; trees absent; relatively high species diversity | 24.3%         |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 4     | Riverine                   | Riverine Circumalkaline Barrens  | On or near braided streams; deciduous or evergreen dwarf shrubs are dominant and trees uncommon                                              | 7.5%          |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Sandy Willow Shrub      |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Dryas Dwarf Shrub       |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Tall Alder Shrub        |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Low Silverberry Shrub   |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 5     | Alpine Meadow              | Alpine Tussock Meadow            | Tussocks \> 25% and sedge cover approaching 60%; dwarf shrubs can be co-dominant; no trees; wet soil                                         | 7.3%          |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Alpine Sedge Meadow              |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 6     | Forest                     | Subalpine Poplar Forest          | Common on or near overbank deposits; characterized by \> 20% tree cover and thick mossy floor                                                | 4.6%          |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine White Spruce Forest     |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Gravelly Poplar Forest  |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Spruce-Poplar Forest    |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+
+: caption
+
+## Lichen Mat Thickness and Biomass
+
+We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species:
+
+$B=1135.6T$,
+
+where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha). Statistical analyses- R Studio software (RStudio Team, 2015) was used for all analyses. Following the methods recommended by Elzinga et al. (1998), we sequentially sampled percent cover values to test for a stable estimate of the overall population mean and standard deviation. We additionally used two-tailed significance tests to determine the necessary sample size for estimating percent cover for a single population and for detecting differences in percent cover between two time periods.
+
+## Fecal Pellet Analysis
+
+We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab
+
+## Litter
+
+Added up the number of transects by litter type and divided by the total number of transects.
 
 ## Number of plots by ecotype
 
-Why only one plot in Forest?
+Why only one plot in Forest? Merkhofer: "We found that Forest ecotypes made for difficult helicopter landing access and subsequently sampled only one site from this ecotype. Future sampling should be targeted to these under-sampled ecotypes."
 
 ```{r, echo=FALSE, tab.cap="Table 2. 'Table 2. Number of plots by ecotype, with mean elevation.'."}
 
 # Display the sampling plots
-
-Sql="SELECT Ecotypes.Ecotype
-, COUNT(*) AS n
-, AVG(Plots.Elev_m) AS [Mean elevation (m)]
-FROM Plots INNER JOIN
- Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
-WHERE Plots.EstablishDate IS NOT NULL
-GROUP BY Ecotypes.Ecotype
-ORDER BY n DESC"
-knitr::kable(dbGetQuery(connection,Sql))
-
+knitr::kable(sqldf("SELECT Ecotype,Count(Ecotype) as n 
+FROM Plots
+Group By Ecotype
+ORDER BY n DESC"))
 
 ```
 
@@ -193,88 +452,94 @@ leaflet() %>%
 
 ```
 
-# Species Diversity
+# Caribou Ecotype Preference
 
-## Overall Species Diversity
-
-```{r, echo=FALSE,tab.cap="Table X. Species list."}
-knitr::kable(dbGetQuery(connection,"SELECT Taxa
-, Family
-, CommonName
-, LifeForm
--- , GrowthHabit
-, GrowthHabitSub as GrowthHabit
-FROM Summary_VegData_DistinctSpeciesOverall
-ORDER BY Taxa"))
-```
-
-## Species Diversity By Plot
-
-```{r, echo=FALSE,tab.cap="Table X. Species diversity by plot"}
-knitr::kable(dbGetQuery(connection,"SELECT Summary_VegData_DistinctSpeciesByPlot.Plot, Ecotypes.Ecotype, COUNT(DISTINCT Summary_VegData_DistinctSpeciesByPlot.Taxa) AS Species
-FROM Summary_VegData_DistinctSpeciesByPlot INNER JOIN
- Plots ON Summary_VegData_DistinctSpeciesByPlot.Plot = Plots.Plot INNER JOIN
- Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
-GROUP BY Summary_VegData_DistinctSpeciesByPlot.Plot, Ecotypes.Ecotype
-ORDER BY Species DESC"))
-```
-
-## Species Diversity By Ecotype
-
-```{r, echo=FALSE,tab.cap="Table X. Species diversity by ecotype."}
-DivByEcotype = dbGetQuery(connection,"SELECT Ecotypes.Ecotype, COUNT(DISTINCT Summary_VegData_DistinctSpeciesByPlot.Taxa) AS Species
-, AVG(Plots.Elev_m) AS [Mean elevation (m)], STDEV(Plots.Elev_m) AS [Elevation (s.d.)]
-FROM Summary_VegData_DistinctSpeciesByPlot INNER JOIN
- Plots ON Summary_VegData_DistinctSpeciesByPlot.Plot = Plots.Plot INNER JOIN
- Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
-GROUP BY Ecotypes.Ecotype
-ORDER BY Species DESC")
-
-knitr::kable(DivByEcotype)
-
-ggplot(DivByEcotype,aes(x=Species,y=`Mean elevation (m)`)) +
-  geom_point() +
-  geom_smooth(method='lm',se=FALSE,color='gray') +
-  xlab("Species count") +
-  theme_minimal()
-
-```
+I performed a spatial join of the GPS collar data over the major ecotypes to see where caribou were spending their time. I used the 'Join Attributes by Location' tool in QGIS to add the ecotype to each GPS fix. I then summarized the number of pings by ecotype.
 
 
-# Vegetation Cover
+# Results
+
+## Vegetation Cover
+
+The table below was calculated from the point intercept data by summing the total number of TopCanopy hits divided by the total number of hits that were possible.
+
+Question: Merkhofer states "We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area." She did not give a formula. I'm uncertain how to weight means. The tables below give gover as the number of point intercept hits divided by the total number of available tries, unweighted by ecotype area.
 
 ```{r, echo=FALSE}
-# Retrieve the percent cover calculations from the database into a data frame
-CoverData = dbGetQuery(connection,"SELECT [ScientificName]
-,[TopCanopyIntercepts]
-,[Lower1Intercepts]
-,[Lower2Intercepts]
-,[Lower3Intercepts]
-,[LowerInterceptsCombined]
-,[SoilSurfaceIntercepts]
-,[TotalHitsPossible]
-,[PctCover_TopCanopy]
-,[PctCover_Lower1]
-,[PctCover_Lower2]
-,[PctCover_Lower3]
-,[PctCover_LowerInterceptsCombined]
-,[PctCover_SoilSurface]
-,[SpeciesCode]
-,[GrowthHabitSub]
-FROM [ChisanaVegetation].[dbo].[Summary_VegData_PercentCover]
---WHERE GrowthHabitSub <> 'Abiotic' -- Omit cover of litter, rock, soil, water, etc.
-ORDER BY PctCover_TopCanopy DESC")
 
-# Write the vegetation percent cover data to file
-ExportFile = paste("./Cover.csv",sep="")
-write.table(CoverData,file=ExportFile,quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
+# Calculate percent cover from the vegetation dataset for each species over the entire dataset 
+# Start by getting the entire list of species
+Sql = "SELECT ScientificName
+
+-- Now add in the counts of intercepts by stratum by species (UPPER() ensures that the species codes, which are sometimes inconsistent in case, match)
+, (SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v where UPPER(v.TopCanopy) = Upper(s.SpeciesCode))  as TopCanopyIntercepts
+, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = Upper(s.SpeciesCode)) as Lower1Intercepts
+, (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = Upper(s.SpeciesCode)) as Lower2Intercepts
+, (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = Upper(s.SpeciesCode)) as Lower3Intercepts
+
+-- Sum the mid-story strata by adding the Lower1-3 strata intercept counts together
+, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = Upper(s.SpeciesCode))
+	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = Upper(s.SpeciesCode))
+	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = Upper(s.SpeciesCode))
+	as LowerInterceptsCombined
+	
+-- Count the number of soil surface intercepts for the current species
+, (SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v where UPPER(v.SoilSurface) = Upper(s.SpeciesCode)) as SoilSurfaceIntercepts
+
+-- Total number of possible intercepts 
+,(SELECT Count(*) as n FROM Dataset_VegData) as TotalHitsPossible 
+
+-- TopCanopy Percent Cover: Add up the total number of intercepts for the current species and divide by the total number of hits that were possible
+, (SELECT Cast(COUNT(TopCanopy) as Float) AS n FROM Dataset_VegData v where UPPER(v.TopCanopy) = Upper(s.SpeciesCode)) 
+    / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_TopCanopy
+
+-- Lower1 Percent Cover: Add up the total number of intercepts for the current species and divide by the total number of hits that were possible
+, Cast((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where Upper(v.Lower1) = Upper(s.SpeciesCode)) As Float) 
+    / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_Lower1
+
+-- Lower2 Percent Cover: Add up the total number of intercepts for the current species and divide by the total number of hits that were possible
+, Cast((SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where Upper(v.Lower2) = Upper(s.SpeciesCode)) As Float) 
+    / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_Lower2
+
+-- Lower3 Percent Cover: Add up the total number of intercepts and divide by the total number of hits that were possible
+, Cast((SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where Upper(v.Lower3) = Upper(s.SpeciesCode)) As Float) 
+    / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_Lower3
+
+-- Lower intercepts combined cover: Add up all the hits for Lower1-3 and divide by the total number of hits that were possible times 3
+-- Cast the numerator from int to float so that the result gets decimal places rather than being an int
+, Cast(((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where Upper(v.Lower1) = Upper(s.SpeciesCode)) -- Lower1 total hits
+	+ (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where Upper(v.Lower2) = Upper(s.SpeciesCode)) -- Lower2 total hits
+	+ (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where Upper(v.Lower3) = Upper(s.SpeciesCode))) As Float) -- Lower3 total hits
+	 / ((SELECT Count(*) as n FROM Dataset_VegData) * 3) * 100 -- Total hits possible times 3 for the three strata, Lower1-3
+	as PctCover_LowerInterceptsCombined
+
+-- Soil Surface Percent Cover: Add up the total number of intercepts and divide by the total number of hits that were possible
+, Cast((SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v where Upper(v.SoilSurface) = Upper(s.SpeciesCode)) As Float) 
+    / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_SoilSurface
+
+,Upper(SpeciesCode)
+,GrowthHabitSub
+FROM SpeciesList s
+ORDER BY ScientificName"
+
+# Generate a data frame of cover values by species
+CoverData = sqldf(Sql)
+
+# Write the deliverables schedule plots to file
+# Filename = paste("CV-10 Percent Cover By Species.csv",sep="")
+# WriteDataFrameToFile(CoverData,Filename)
+
+#knitr::kable(CoverData,digits=2)
 
 ```
 
-## Foliar cover
+### Foliar cover
+
+* Not weighted by ecotype cover
 
 ```{r, echo=FALSE,tab.cap="Figure 1. Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%."}
-knitr::kable(sqldf("SELECT ScientificName,PctCover_TopCanopy as [Foliar % cover] 
+# Print the foliar (TopCanopy stratum) cover.
+knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_TopCanopy as [% cover] 
 FROM CoverData 
 WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
 And PctCover_TopCanopy > 1
@@ -282,87 +547,223 @@ AND PctCover_TopCanopy > 0
 ORDER BY PctCover_TopCanopy DESC"))
 ```
 
-## Mid-story Cover
+### Mid-story Cover
 
-This may not be useful, few hits. LM ignored these data.
+* Not weighted by ecotype cover. This may not be useful, few hits. LM ignored these data.
 
 ```{r, echo=FALSE,tab.cap="Figure 1. Percent mid-story cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%."}
-knitr::kable(sqldf("SELECT ScientificName,PctCover_LowerInterceptsCombined as [Mid-story % cover] 
+# Print the mid-story (Lower1-3 strata) cover.
+knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_LowerInterceptsCombined as [% cover] 
 FROM CoverData 
 WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
 AND PctCover_LowerInterceptsCombined > 0.1
 ORDER BY PctCover_LowerInterceptsCombined DESC"))
 ```
 
-## Basal Cover
+### Basal Cover
 
 ```{r, echo=FALSE,tab.cap="Table x. Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%."}
-
-knitr::kable(sqldf("SELECT ScientificName,PctCover_SoilSurface as [Basal % cover] 
+# Print the basal (SoilSurface stratum) cover.
+knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
 FROM CoverData 
-WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+WHERE 
+-- GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+GrowthHabitSub NOT IN ('Abiotic')
 AND PctCover_SoilSurface > 0.1
 ORDER BY PctCover_SoilSurface DESC"))
 
 ```
 
-## Moss And Lichen Cover
 
-```{r, echo=FALSE,tab.cap="Table x. Percent ground cover of moss and lichen in the range of the Chisana caribou herd."}
+## Lichen Biomass
 
-knitr::kable(sqldf("SELECT ScientificName,PctCover_SoilSurface as [Basal % cover] 
-FROM CoverData 
-WHERE GrowthHabitSub IN ('Moss','Lichen Crust') And (GrowthHabitSub <> 'Abiotic')
-AND PctCover_SoilSurface > 0
-ORDER BY PctCover_SoilSurface DESC"))
+```{r, echo=FALSE,tab.cap="Table x. Percent ground cover of moss and lichen in the range of the Chisana caribou herd. Biomass is estimated as the mean lichen thickness (cm) multiplied by 1135.6 (Moen et al. (2007)."}
 
-```
+# Get the lichen thickness and biomass data
+Sql="SELECT Ecotype
+, AVG(IFNULL(v.LichenHeight, 0)) AS [Mean lichen thickness (cm)]
+, MIN(IFNULL(v.LichenHeight, 0)) AS Min
+, MAX(IFNULL(v.LichenHeight, 0)) AS Max
+, STDEV(IFNULL(v.LichenHeight, 0)) AS SD
 
-# Vegetation Cover By Ecotype
+-- We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species as B=1135.6T where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha).
+,1135.6 * AVG(IFNULL(v.LichenHeight, 0)) as [Mean lichen biomass (kg/ha)] 
 
-Next, I generated the same chart but parsed the results by ecotype (Jorgenson). Lichen crust is pronounced in the Alpine Meadow ecotype. It would be neat to see if the GPS collar data shows the caribou loitering in this ecotype.
+-- Biomass estimate lower by one standard deviation, the case statement returns zero in cases where the mean lichen thickness minus one standard deviation is zero in which case biomass should be zero
+,Case 
+  When AVG(IFNULL(v.LichenHeight, 0)) - STDEV(IFNULL(v.LichenHeight, 0)) < 0 Then 0 
+  Else AVG(IFNULL(v.LichenHeight, 0)) - STDEV(IFNULL(v.LichenHeight, 0)) * 1135.6 
+ End As [Biomass lower estimate] 
 
-```{r, echo=FALSE,fig.cap="Figure 2. Percent cover by plant growth habit and Jorgenson ecotype."}
-# Plot the percent cover by ecotype
-# ggplot(CoverData) +
-#   geom_col(aes(x=Ecotype,y=PercentCover,fill=GrowthHabitSub),position='fill') +
-#   theme_minimal() +
-#   # Make X axis labels vertical
-#   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))
+-- Biomass estimate upper by one standard deviation
+,1135.6 * (AVG(IFNULL(v.LichenHeight, 0)) + STDEV(IFNULL(v.LichenHeight, 0))) as [Biomass upper estimate] 
 
-```
 
-```{r, echo=FALSE}
-# Stats for the previous figure
-# knitr::kable(sqldf("select Ecotype,GrowthHabitSub
-#   , avg(PercentCover) as Mean
-#   , min(PercentCover) as Min
-#   , max(PercentCover) as Max
-#   , stdev(PercentCover) as SD
-#   , count(PercentCover) as n
-#   FROM CoverData 
-#   group by EcoType, GrowthHabitSub 
-#   order by EcoType,Mean DESC"),caption='Table 2. Mean ercent cover by plant growth habit and Jorgenson ecotype.')
+, COUNT(*) AS n
+FROM Dataset_VegData v 
+GROUP BY Ecotype
+--ORDER BY [Mean lichen biomass]  DESC"
+Biomass = sqldf(Sql)
 
 ```
 
-# Lichen Height and Biomass
-
-```{r, echo=FALSE,fig.cap="Figure X. Lichen height by ecotype."}
-
-# Get the lichen height data
-LichenHeightData = dbGetQuery(connection,"SELECT Ecotype, LichenHeight FROM Dataset_VegData ORDER BY Ecotype")
-
-ggplot(LichenHeightData) +
-  geom_boxplot(aes(x=Ecotype,y=LichenHeight)) +
+```{r, echo=FALSE,fig.cap="Figure X. Lichen biomass (kg/ha) by ecotype."}
+# Plot the lichen biomass (thickness * 1135.6 (Moen et al. (2007))
+ggplot(Biomass) +
+  geom_col(aes(x=Ecotype,y=`Mean lichen biomass (kg/ha)`)) +
+  geom_errorbar(aes(x=Ecotype,ymin=`Biomass lower estimate`,ymax=`Biomass upper estimate`)) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
 ```
 
-# Conclusion
+```{r, echo=FALSE,tab.cap="Table X. Lichen mat thickness (cm) by ecotype."}
+# Output the lichen thickness and biomass stats
+knitr::kable(Biomass, digits = 1)
 
-I've only scratched the surface here but I think there are a great many things we can do with these data. Once I'm done with preliminary data analysis and dealing with data quality issues I'll post files to NPS Data Store.
+```
+
+## Litter
+
+```{r, echo=FALSE,tab.cap="Table X. Litter dominance (count of transects by litter type divided by total number of transects."}
+
+
+# Get a list of distinct LitterTypes to use in queries that follow
+LitterTypes = sqldf("SELECT DISTINCT NTransectLitterType As LitterType FROM Plots 
+UNION 
+SELECT DISTINCT SETransectLitterType FROM Plots
+UNION 
+SELECT DISTINCT SWTransectLitterType FROM Plots
+")
+
+
+Sql = "SELECT IFNULL(LitterType,'None') As  [Litter type]
+
+-- Uncomment the columns below to see the counts of transects by litter type
+,(SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.NTransectLitterType,'None') = IFNULL(d.LitterType,'None')) As NTransects
+,(SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SWTransectLitterType,'None') = IFNULL(d.LitterType,'None')) As SWTransects
+,(SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SETransectLitterType,'None') = IFNULL(d.LitterType,'None')) As SETransects
+
+, (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.NTransectLitterType,'None') = IFNULL(d.LitterType,'None')) 
++ (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SWTransectLitterType,'None') = IFNULL(d.LitterType,'None'))
++ (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SETransectLitterType,'None') = IFNULL(d.LitterType,'None')) As SumOfTransects
+
+,(SELECT Count(*) FROM Plots WHERE EstablishDate IS NOT NULL) * 3 As TotalNumberOfTransects
+
+,CAST((
+	 (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.NTransectLitterType,'None') = IFNULL(d.LitterType,'None')) 
+	+ (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SWTransectLitterType,'None') = IFNULL(d.LitterType,'None'))
+	+ (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SETransectLitterType,'None') = IFNULL(d.LitterType,'None')))
+	As Float)
+	/ (SELECT Count(*)* 3 FROM Plots WHERE EstablishDate IS NOT NULL) * 100
+	As [% of transects]
+
+FROM LitterTypes d
+ORDER BY [% of transects] DESC,LitterType
+"
+
+# Get the litter type data into a data frame
+LitterType = sqldf(Sql)
+
+# Print out the summary table
+knitr::kable(sqldf("SELECT [Litter type],SumOfTransects as [Number of transects],[% of transects] FROM LitterType ORDER BY [% of transects] DESC"),digits=1)
+
+# Get the total number of transects sampled into a parameter to us in the text
+TotalTransects = LitterType[1,"TotalNumberOfTransects"]
+
+```
+
+
+
+## Caribou Ecotype Preference
+
+```{r, echo=FALSE}
+# Read in the ecotype preference dataset
+# This was generated by loading the chisana caribou gps collar data into GIS over the ecotypes polygons and then adding the ecotype that the point overlapped as a column and exporting as a CSV
+
+# This is how I processed the GPS data, the lines below won't be needed as the data file is processed and can be imported.
+# EcoPref = read.csv("J:/Monitoring/Caribou/WRST/Projects/Chisana Caribou Habitat Assessment/Data/ChisanaGPSPointsByEcotype.csv")
+# 
+# # QC
+# EcoPref$Date = as.Date(EcoPref$Date) # Make the dates actual dates
+# 
+# # The Season column came out of GIS screwed up, fix it
+# # Winter is October through March, otherwise summer
+# EcoPref$Season = ifelse(EcoPref$Month <= 3 | EcoPref$Month >= 10,'Summer','Winter') 
+# 
+# # Extract only the needed columns
+# EcoPref = sqldf("SELECT AnimalId as Caribou,[Date],Lat_WGS84 as Lat,Lon_WGS84 as Lon,Month,Day,Season,Ecotype_2 as Ecotype FROM EcoPref ORDER BY AnimalId,Date")
+# 
+# # Join the lichen biomass data by ecotype
+# EcoPref = merge(EcoPref,Biomass,by="Ecotype")
+# EcoPref = sqldf("SELECT Caribou,Date,Ecotype,Lat,Lon,strftime('%Y',Date) As Year,Month,Day FROM EcoPref ORDER BY Caribou,Date")
+
+# Write the GPS data to file
+# Filename = paste("CV-10 Caribou Ecotype Preference Spatial Data SENSITIVE ",Sys.Date(),".csv",sep="")
+# WriteDataFrameToFile(EcoPref,Filename)
+
+# Read in the caribou ecotype preference dataset
+
+#Read in the caribou ecotype preference dataset
+EcoPref = read.csv(paste(DeliverablesDirectory,"CV-10 Caribou Ecotype Preference Spatial Data SENSITIVE.csv",sep=""),header=TRUE)
+```
+
+### Ecotype preference
+
+```{r, echo=FALSE,tab.cap="Table X. Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype."}
+
+Sql = "SELECT Ecotype
+,Count(*) as [GPS Fixes] 
+,(SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') as TotalFixes
+,Cast(Count(*) As Float) / (SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') * 100 as [Percent of fixes]
+FROM EcoPref
+WHERE Ecotype IS NOT NULL and NOT Ecotype = ''
+GROUP BY Ecotype 
+ORDER By Count(*) DESC"
+PercentOfFixesByEcotype = sqldf(Sql)
+knitr::kable(sqldf("SELECT Ecotype,ConCat(Cast([Percent of fixes] as Int),'%') as [Percent of GPS fixes]  FROM PercentOfFixesByEcotype ORDER BY [Percent of fixes] DESC"),digits=2)
+
+# Get the total number of GPS fixes into a parameter that can be used in the text
+TotalGPSFixes = PercentOfFixesByEcotype[1,'TotalFixes']
+
+```
+
+Total GPS fixes = `r TotalGPSFixes`
+
+### Ecotype Preference By Month
+
+```{r, echo=FALSE,fig.cap="Figure X. Chisana caribou ecotype preference by month as determined from GPS collar data."}
+# By Month
+Sql = "SELECT Month, Ecotype,Count(*) as [GPS Fixes]
+FROM EcoPref
+WHERE Ecotype IS NOT NULL and NOT Ecotype = ''
+GROUP BY Month,Ecotype 
+ORDER By Month, Count(*) DESC"
+EcoPrefByMonth = sqldf(Sql)
+
+
+ggplot(EcoPrefByMonth) +
+  geom_col(aes(x=Month,y=`GPS Fixes`,fill=Ecotype),position="fill") +
+  ggtitle("Chisana caribou ecotype preference by month") +
+  theme_minimal() +
+  # Make X axis labels vertical
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  scale_x_continuous(breaks = seq(1, 12, by = 1)) 
+
+```
+
+## Fecal Pellet Analysis
+
+```{r, echo=FALSE,tab.cap="Table X. Fecal pellet composition for plant categories greater than one percent."}
+Sql = "SELECT Plant,Avg(PctComposition) as Mean,Count(*) as n 
+FROM PelletData 
+GROUP BY Plant 
+HAVING Avg(PctComposition) > 1
+ORDER BY Avg(PctComposition) DESC"
+sqldf(Sql)
+```
+
+# Conclusion
 
 # Appendix A: Sampling Plots
 
@@ -370,51 +771,154 @@ I've only scratched the surface here but I think there are a great many things w
 knitr::kable(Plots,caption='Table ?. Sampling plots.')
 ```
 
-# Database table and column descriptions
 
-```{r, echo=FALSE}
-Sql = "select distinct [Table],TableDescription from DatabaseColumnsDescriptions where left([table],1) <> 'z' and not [table] in ('sysdiagrams','DeliverablesSchedule','LifeFormCoverMeans')"
-knitr::kable(dbGetQuery(connection,Sql),caption='Table ?. Database table descriptions.')
+```{r, echo=FALSE, results='asis'}
+# Appendix B: Vegetation Summary By Plot
+# Holding off on developing this query until I'm sure it's needed
+# # Function to dump out a report section showing vegetation characterization
+# GetPlotVegSummary = function(Plot){
+#   
+#   # Header and text
+#   cat("# Vegetation Summary of Plot ",Plot,"  \n\n")
+#   cat("  \n\n")
+#   cat("Vegetation Summary of Plot ",Plot," \n\n")
+#   cat("  \n\n")
+#   
+# 
+#   
+#   # Dump out the composition table
+#   print(,digits=1)
+#   cat("  \n\n")
+# }
+# 
+# Sql = "SELECT e.Ecotype, s.ScientificName
+# -- Now add in the counts of intercepts by stratum by species (UPPER() ensures that the species codes, which are sometimes inconsistent in case, match)
+# , (SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.TopCanopy) = Upper(s.SpeciesCode))  as TopCanopyIntercepts
+# , (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = Upper(s.SpeciesCode)) as Lower1Intercepts
+# , (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = Upper(s.SpeciesCode)) as Lower2Intercepts
+# , (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = Upper(s.SpeciesCode)) as Lower3Intercepts
+# 
+# -- Sum the mid-story strata by adding the Lower1-3 strata intercept counts together
+# , (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = Upper(s.SpeciesCode))
+# 	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = Upper(s.SpeciesCode))
+# 	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = Upper(s.SpeciesCode))
+# 	as LowerInterceptsCombined
+# 
+# -- Count the number of soil surface intercepts for the current species
+# , (SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.SoilSurface) = Upper(s.SpeciesCode)) as SoilSurfaceIntercepts
+# 
+# -- Total number of possible intercepts 
+# ,(SELECT Count(*) as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) as TotalHitsPossible 
+# 
+# FROM SpeciesList s
+# CROSS JOIN Ecotypes e
+# 
+# WHERE e.Ecotype = 'Alpine Dwarf Shrub/Barrens'
+# 
+# ORDER BY e.Ecotype, s.ScientificName"
+# sqldf(Sql)
+# 
+# 
+# 
+# GetPlotVegSummary('ADD01')
+
 ```
 
-```{r, echo=FALSE}
-Sql = "SELECT        [Table], [Column], ColumnDescription
-FROM            DatabaseColumnsDescriptions
-where left([table],1) <> 'z' and not [table] in ('sysdiagrams','DeliverablesSchedule','LifeFormCoverMeans')
-ORDER BY [Table], [Column]"
-knitr::kable(dbGetQuery(connection,Sql),caption='Table ?. Database columns descriptions.')
 
-```
+# Appendix B: Fecal Pellet Results By Sample
 
-# Data Summary By Plot
-
-```{r, echo=FALSE}
-# Get the vegetation data
-# VegData = dbGetQuery(connection,"SELECT Plot, Line, PointLoc, Ecotype, TopCanopy, TopCanopyScientificName, TopCanopyCommonName, TopCanopyLifeForm, TopCanopyGrowthHabit, TopCanopyGrowthHabitSub, Lower1, Lower1ScientificName, 
-#  Lower1CommonName, Lower1LifeForm, Lower1GrowthHabit, Lower1GrowthHabitSub, Lower2, Lower2ScientificName, Lower2CommonName, Lower2LifeForm, Lower2GrowthHabit, Lower2GrowthHabitSub, Lower3, 
-#  Lower3ScientificName, Lower3CommonName, Lower3LifeForm, Lower3GrowthHabit, Lower3GrowthHabitSub, SoilSurface, SoilSurfaceScientificName, SoilSurfaceCommonName, SoilSurfaceLifeForm, SoilSurfaceGrowthHabit, 
-#  SoilSurfaceGrowthHabitSub, SoilSurfaceSpecies, SoilSurfaceSpeciesScientificName, SoilSurfaceSpeciesCommonName, SoilSurfaceSpeciesLifeForm, SoilSurfaceSpeciesGrowthHabit, SoilSurfaceSpeciesGrowthHabitSub, 
-#  SoilSurfaceDescription, LichenHeight, Lat, Lon, Year, Date, EcotypeID, Elev_m, SlopePosition, SlopeLength, SlopeCrossSection, ParentRock, Drainage, AvgPrecip, VersionDate, AvgPrecipUOM, EcolSite, ParentMaterial, 
-#  MicroRelief, MicroReliefSize, GeoMorphicDisturbance, EvidenceOfFrostAction, MaxSlope, EvidenceOfWind, WindExposureClass, CaribouSign, EvidenceOfFire, SlopeAsp, EstablishDate, Crew
-# FROM            Dataset_VegData
-# ORDER BY Plot, Line, PointLoc")
-
-
-
-```
-
-```{r, echo=FALSE}
-GetPlotSummary = function(Plot){
-  cat("## ",Plot,"\n\n")
-  Sql = paste("SELECT * FROM Summary_VegData_LichenHeightByPlot WHERE Plot='",Plot,"'",sep="")
-  cat("## ",Sql,"\n\n")
-  print(dbGetQuery(connection,Sql))
-  cat("\n\n")
+```{r, echo=FALSE, results='asis'}
+# Function to dump out a report section showing pellet composition
+GetPelletCompositionSummary = function(Sample){
+  
+  # Header and text
+  cat("# Fecal Pellet Sample ",Sample,"  \n\n")
+  cat("  \n\n")
+  cat("Fecal pellet composition summary:  \n\n")
+  cat("  \n\n")
+  
+  # Get the percent composition of the pellet
+  Sql = paste("SELECT Plant,Form,  PctComposition AS [Mean % composition]
+  FROM PelletData
+  WHERE Sample='",Sample,"' And PctComposition > 0
+  ORDER BY Sample, PctComposition DESC",sep="")
+  
+  # Dump out the composition table
+  print(knitr::kable(sqldf(Sql)),digits=1)
+  cat("  \n\n")
 }
 
 ```
 
-```{r, results='asis', echo=FALSE}
-GetPlotSummary("ADD5")
+```{r, echo=FALSE,results='asis'}
+# Loop through the Sample IDs and push out a summary to the report for each
+Samples = sqldf("SELECT DISTINCT Sample FROM PelletData WHERE Sample IS NOT NULL ORDER BY Sample")
+for(i in 1:nrow(Samples)) {       
+  Sample = Samples$Sample[i]
+  GetPelletCompositionSummary(Sample)
+}
 
 ```
+
+
+
+# Appendix ?: Litter Type Summary
+
+```{r, echo=FALSE, results='asis'}
+
+knitr::kable(LitterType,digits=1)
+
+```
+
+
+
+## Column definitions
+
+```{r, echo=FALSE,tab.cap="Table X. Chisana vegetation dataset column definitions."}
+#knitr::kable(Metadata)
+```
+
+
+
+# References
+
+Arseneault, D., Villeneuve, N., Boismenu, C., Leblanc, Y., & Deshaye, J. (1997). Estimating lichen biomass and caribou grazing on the wintering grounds of northern Quebec: An application of fire history and Landsat data. *Journal of Applied Ecology*, 65-78.
+
+Boertje, R. D. (1984). Seasonal diets of the Denali caribou herd, Alaska. *Arctic*, 161-165.
+
+Clarke, H., and M. Waterreus. (2012). Chisana caribou range lichen assessment, September, 2011. Yukon Fish and Wildlife Branch Report SR-12-01. Whitehorse, Yukon, Canada.
+
+Collins, W. B., Dale, B. W., Adams, L. G., Mcelwain, D. E., & Joly, K. (2011). Fire, grazing history, lichen abundance, and winter distribution of caribou in Alaska's taiga. *The Journal of Wildlife Management*, *75*(2), 369-377.
+
+Elzinga, C. L., Salzer, D. W., & Willoughby, J. W. (1998). Measuring & Monitoring Plant Populations. U.S. Bureau of Land Management Papers. Paper 17.
+
+Farnell, R., & Gardner, C. (2002). Chisana caribou herd—2002. *Yukon Department of Environment, Whitehorse, Yukon, Canada*.
+
+Fischer, L. A. (2002). Late winter resource selection and the potential for competition between wood bison and woodland caribou in the Yukon. Doctoral dissertation. The University of Calgary, Alberta.
+
+Florkiewicz, R. F., Flynn, N., MacLean, N., Francis, S. R., Adamczewski, J. Z., & Loewen, V. (2004). *Little Rancheria Caribou in the Yukon: Evaluation of winter habitat quality and habitat use*. Department of Environment Report TR-03-03. Yukon Environment, Yukon.
+
+Herrick, J. E., Van Zee, J. W., Havstad, K. M., Burkett, L. M., & Whitford, W. G. (2005). *Monitoring manual for grassland, shrubland and savanna ecosystems.* USDA-ARS Jornada Experimental.  Las Cruces, New Mexico
+
+Joly, K., Cole, M. J., & Jandt, R. R. (2007). Diets of overwintering caribou, Rangifer tarandus, track decadal changes in Arctic tundra vegetation. *The Canadian Field-Naturalist*, *121*(4), 379-383.
+
+Joly, K., Stuart Chapin III, F., & Klein, D. R. (2010). Winter habitat selection by caribou in relation to lichen abundance, wildfires, grazing, and landscape characteristics in northwest Alaska. *Ecoscience*, *17*(3), 321-333.
+
+Johnson, H. L. (1994). Range Inventory and Monitoring following caribou reintroduction to the Nushagak Peninsula: A progress report of the Nushagak caribou vegetation study on the Togiak National Wildlife Refuge. US Fish and Wildlife Service progress report. Togiak National Wildlife Refuge, Dillingham. 144 pp.
+
+Jorgenson, M. T., J. E. Roth, P. F. Loomis, E. R. Pullman, T. C. Cater, M. S. Duffy, W. A. Davis, and M. J. Macander. (2008). An ecological survey for landcover mapping of Wrangell-St. Elias National Park and Preserve. Natural Resource Technical Report NPS/WRST/NRTR—2008/094. National Park Service, Fort Collins, Colorado.
+
+Moen, J., Danell, Ö., & Holt, R. (2009). Non-destructive estimation of lichen biomass. *Rangifer*, *27*(1).
+
+Oosenbrug, S. M. (1976). *Range relationships and population dynamics of the Burwash Uplands caribou herd, Yukon Territory*. University of Waterloo, Department of Biology.
+
+Oosenbrug, S. M., & Theberge, J. B. (1980). Altitudinal movements and summer habitat preferences of woodland caribou in the Kluane Ranges, Yukon Territory. *Arctic*, 59-72.
+
+Post, E., & Klein, D. R. (1999). Caribou calf production and seasonal range quality during a population decline. *The Journal of Wildlife Management*, 335-345.
+
+Swanson, J. D., & Barker, M. H. W. (1992). Assessment of Alaska reindeer populations and range conditions. *Rangifer*, *12*(1), 33-43.
+
+Valkenburg, P. (1996). Population decline in the Delta caribou herd with reference to other Alaskan herds. *Rangifer*, *16*(4), 53-62.
+
+
+
