@@ -28,7 +28,13 @@ library(leaflet)
 # Directory where project deliverables are stored (authoritative copies will eventually go in Data Store)
 DeliverablesDirectory = "J:/Monitoring/Caribou/WRST/Projects/Chisana Caribou Habitat Assessment/Data/Deliverables/"
 
+# Initiate table and figure counters
+TableCounter = 2
+FigureCounter = 1
+
 ```
+
+
 
 
 ```{r, echo=FALSE}
@@ -40,86 +46,81 @@ connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nun
 # Function to Write a data frame to a file in the deliverables directory. This will be used as data is pulled from the database and written to files for archival in Data Store
 WriteDataFrameToFile = function(DataFrame,Filename){
   ExportFile = paste(DeliverablesDirectory,Filename,sep="")
-  # Disabled until needed
   write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
 }
 
-
-
-
 # Write the vegetation dataset to file
 # ----------------------------------------------------------------------------
-# Sql = "SELECT Plot 
-# , Line 
-# , PointLoc 
-# , TopCanopy 
-# , TopCanopyScientificName 
-# , TopCanopyCommonName 
-# , TopCanopyLifeForm 
-# , TopCanopyGrowthHabit 
-# , TopCanopyGrowthHabitSub 
-# , Lower1 
-# , Lower1ScientificName 
-# , Lower1CommonName 
-# , Lower1LifeForm 
-# , Lower1GrowthHabit 
-# , Lower1GrowthHabitSub 
-# , Lower2 
-# , Lower2ScientificName 
-# , Lower2CommonName 
-# , Lower2LifeForm 
-# , Lower2GrowthHabit 
-# , Lower2GrowthHabitSub 
-# , Lower3 
-# , Lower3ScientificName 
-# , Lower3CommonName 
-# , Lower3LifeForm 
-# , Lower3GrowthHabit 
-# , Lower3GrowthHabitSub 
-# , SoilSurface 
-# , SoilSurfaceScientificName 
-# , SoilSurfaceCommonName 
-# , SoilSurfaceLifeForm 
-# , SoilSurfaceGrowthHabit 
-# , SoilSurfaceGrowthHabitSub 
-# , SoilSurfaceDescription 
-# , LichenHeight 
-# , Ecotype 
-# , Lat 
-# , Lon 
-# , Elev_m 
-# , SlopePosition 
-# , SlopeLength 
-# , SlopeCrossSection 
-# , ParentRock 
-# , Drainage
-# , AvgPrecip
-# , AvgPrecipUOM
-# , EcolSite
-# , ParentMaterial
-# , MicroRelief
-# , MicroReliefSize
-# , GeoMorphicDisturbance
-# , EvidenceOfFrostAction
-# , MaxSlope
-# , EvidenceOfWind
-# , WindExposureClass
-# , CaribouSign
-# , EvidenceOfFire
-# , SlopeAsp
-# , Date
-# , Crew
-# , VersionDate 
-# FROM Dataset_VegData 
-# ORDER BY Plot, Line, PointLoc"
-#Dataset_VegData = dbGetQuery(connection,Sql)
+Sql = "SELECT Plot
+, Line
+, PointLoc
+, TopCanopy
+, TopCanopyScientificName
+, TopCanopyCommonName
+, TopCanopyLifeForm
+, TopCanopyGrowthHabit
+, TopCanopyGrowthHabitSub
+, Lower1
+, Lower1ScientificName
+, Lower1CommonName
+, Lower1LifeForm
+, Lower1GrowthHabit
+, Lower1GrowthHabitSub
+, Lower2
+, Lower2ScientificName
+, Lower2CommonName
+, Lower2LifeForm
+, Lower2GrowthHabit
+, Lower2GrowthHabitSub
+, Lower3
+, Lower3ScientificName
+, Lower3CommonName
+, Lower3LifeForm
+, Lower3GrowthHabit
+, Lower3GrowthHabitSub
+, SoilSurface
+, SoilSurfaceScientificName
+, SoilSurfaceCommonName
+, SoilSurfaceLifeForm
+, SoilSurfaceGrowthHabit
+, SoilSurfaceGrowthHabitSub
+, SoilSurfaceDescription
+, LichenHeight
+, Ecotype
+, Lat
+, Lon
+, Elev_m
+, SlopePosition
+, SlopeLength
+, SlopeCrossSection
+, ParentRock
+, Drainage
+, AvgPrecip
+, AvgPrecipUOM
+, EcolSite
+, ParentMaterial
+, MicroRelief
+, MicroReliefSize
+, GeoMorphicDisturbance
+, EvidenceOfFrostAction
+, MaxSlope
+, EvidenceOfWind
+, WindExposureClass
+, CaribouSign
+, EvidenceOfFire
+, SlopeAsp
+, Date
+, Crew
+, EcotypeID
+, VersionDate
+FROM Dataset_VegData
+ORDER BY Plot, Line, PointLoc"
+Dataset_VegData = dbGetQuery(connection,Sql)
 
 #Write the vegetation data to file
-#ExportFile = paste(DeliverablesDirectory,"CV-10 Certified Chisana Range Vegetation Dataset ",Sys.Date(),".csv",sep="")
-#write.table(Data,file=ExportFile,quote=FALSE,sep="|",na="",row.names = FALSE, col.names = TRUE)
 #Filename = paste("CV-10 Chisana Range Vegetation Dataset.csv",sep="")
 #WriteDataFrameToFile(Dataset_VegData,Filename)
- 
+
 # Get metadata for the dataset above
 #Metadata = dbGetQuery(connection,"SELECT [Column],[Definition] FROM Dataset_VegData_Metadata")
 #MetadataFilename = paste("CV-10 Chisana Range Vegetation Dataset ",Sys.Date()," Metadata - Column Descriptions.csv",sep="")
@@ -261,51 +262,18 @@ SpeciesList  = read.csv(paste(DeliverablesDirectory,"CV-10 Species List.csv",sep
 
 ```
 
-# Habitat Condition and Diet of the Chisana Caribou Herd, Alaska
+# Range Characterization and Diet of the Chisana Caribou Herd, Alaska
 
 Authors, etc.
 
 ## Wrangell-St. Elias National Park and Preserve
 
-# ABSTRACT
+# Abstract
 
-The Chisana caribou herd is a small international woodland caribou (Rangifer tarandus caribou) herd that ranges across the Yukon-Alaska border. In Alaska, the herd ranges predominately within Wrangell-St. Elias National Park & Preserve (WRST).  After a population decline in the 1990’s, the herd was listed as a “Specially Protected” population under Yukon’s Wildlife Act and is one of 36 herds comprising the Northern Mountain Caribou population designated a species of “Special Concern” in Yukon. All harvest of this herd ceased in 1994 and by 2003 an unprecedented and expensive 4-year captive calf rearing program was initiated in Yukon that likely stabilized the herd. The herd is currently managed under a multi-agency, international management plan.  Limited diet analysis and anecdotal information suggests that poor quality habitat and nutrient-limited food occur within the herd’s range. Horse grazing in the area may also be affecting caribou habitat. This proposal seeks to address an important action item in the management plan which is to increase knowledge of the diet and forage habitat within the herd range.
+[to be written]
+
 
 # Introduction
-
-## Intro Putera
-
-The Chisana caribou herd is a small international herd that ranges across the Yukon-Alaska border north of the St. Elias Mountain Range.
-
-The herd’s calving and summer range is predominantly within Wrangell-St. Elias National Park & Preserve (WRST) in Alaska.
-
-After a serious population decline in the 1990’s, the herd was listed as a “Specially Protected” population in 2002 under Yukon’s Wildlife Act and is one of 36 herds designated a species of “Special Concern” under Yukon’s federal Species at Risk Act (SARA).
-
-The herd is managed under an international, multi-agency Chisana caribou herd working group. The Chisana caribou herd management plan identifies a number of objectives to be cooperatively pursued by the working group agencies. One objective is to increase current knowledge of the forage habitat and Chisana caribou diet within the herd’s range to better understand whether it is a contributing factor limiting population size.
-
-The region is thought to have a very high habitat composition of moss and has been anecdotally described as very poor caribou habitat (B. Collins, pers. comm.).
-
-Caribou diet composition estimated from microhistological fecal analysis during March and June in 1994 and 1995 and during March 2000 and 2001 (Lenart 1997, Farnell and Gardner 2002) seems to support this observation.
-
-Most notably, average lichen composition was 50% in late winter during 1994-95 and dropped to 30% in 2000-01.
-
-Lichens have been shown to comprise over 50% of the winter diet of caribou herds in Alaska (Boertje 1990, Joly et al. 2007, Russel et al. 1993) and of woodland caribou in Yukon (Fischer and Gates 2005).
-
-Average percent composition of moss was high (24%) during winter 1994-95 compared to other studies ranging from 10 – 15% moss, and increased to an average of 53% moss composition in 2000-01.
-
-The winter diets of 13 Yukon woodland caribou herds sampled (n=95 samples) between 1981 and 2001 were predominantly lichen (74.94%) while moss (3.57%) made up only a minor component of these diets (Farnell and Gardner 2002).
-
-The high proportion of moss raises questions about the adequacy of winter forage quality and winter range condition for the herd because mosses have extremely low nutritional value and digestibility compared to lichens which are energy rich, highly palatable, and easily digested.
-
-Poor winter forage condition and availability of lichens can affect caribou body condition, fetal growth, and calf birth and growth rates (Parker et al. 2005).
-
-Poor summer forage condition can lower female conception rates through failure to regain sufficient body mass lost the previous winter.
-
-Several climate change predictions, if realized, have the potential to negatively affect caribou habitat and forage. Lichens depend on atmospheric moisture and nutrients making them vulnerable to summer warming and drying resulting in decreased growth rates. Shrubs are expected to increase with climate warming (Walker et al. 2006), and several studies indicate that shrub expansion is already occurring in Arctic and sub-Arctic Alaska (Jandt et al. 2007, Sturm et al. 2001). Shrubs and other vascular plant species compete with lichens for sunlight, ground surface substrate, and can alter snow-melt patterns that favor even more shrub growth. Increased shrubs on the landscape in conjunction with warmer temperatures, could increase fire frequency (Higuera et al. 2008). Graminoids (grasses and sedges) are also predicted to increase with a warming climate (Chapin et al. 1995; Walker et al. 2006). Although graminoids are part of the summer diet of caribou, lichen and graminoid cover are negatively correlated (Holt et al. 2008). If Chisana caribou habitat is currently considered poor, then climate induced changes may exacerbate the situation and negatively affect herd stability or growth.
-
-The objectives of this project are to 1) evaluate caribou forage habitat through vegetation sampling and 2) to examine diets of caribou through microhistological fecal sampling.
-
-## Intro Merkhofer
 
 The Chisana Caribou Herd (CCH) is a small herd of woodland caribou located in northeastern Wrangell St. Elias (WRST) National Park and Preserve in Alaska and the Tetlin National Wildlife Refuge in the Yukon. During the early 1990s, many caribou herds in interior Alaska experienced population declines of varying severity (Valkenburg et al., 1996). From 1989 to 2001, the CCH population dropped from an estimated 1800 to 400 individuals (R. Farnell, unpublished data). The CCH became listed as a “Specially Protected” population in 2002 under the Yukon’s Federal Species at Risk Act. After the implementation of a captive rearing program and the development of an international, multiagency management plan, the CCH population is now stable and open to subsistence hunting. However, the current population is significantly below pre-decline levels. Several factors most likely contributed to the CCH population decline including predation, low recruitment, and poor habitat.
 
@@ -327,14 +295,9 @@ Figure 1. Defining the core range of the Chisana caribou herd in northeastern WR
 
 Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST Park and Preserve (Table 1). Map based on ecotype landcover developed by Jorgenson et al. (2008).
 
-
 We generated 56 random points for site locations within the Chisana caribou herd range. We included a 3000 m buffer between sites to ensure an even geographic distribution throughout the study area (geographic locations of sites are listed in Appendix A). Points that fell within rivers were moved to the nearest accessible riverine ecotype and points on excessively steep terrain were eliminated. We re-assigned ecotypes after field data collection using the formal WSRT ecotype classification key (summarized in Table 1; Jorgenson et al., 2008). We visited 23 sites in July, 2015 and 10 sites in July, 2016. Sites were accessed by helicopter or foot using a Trimble or Garmin GPS for navigation (Fig. 3). Permanent plots were established at all sites except those falling with a proposed Archeological District around Wiki Peak. Permanent plots were marked with a 60 cm-long rebar located at plot centers. At each site, we described physical landscape characteristics such as slope position, drainage, and geomorphic disturbance. We recorded vegetation along three 20 m-long transects oriented at 0, 120, and 240° from the plot center. Each transect was photographed and measured for slope. Transects were systematically sampled at 50 cm intervals using the line-point intercept method. At each point, we recorded all intercepted overstory and understory taxa, soil surface cover, and lichen height. Lichen height was measured using a 3 mm-wide metal skewer inserted into the base of the lichen mat (Arseneault et al., 1997; Moen et al. 2007; Collins et al., 2010). We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present. Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss (See Appendix B for detailed field measurement protocol).
 
-
-
 We identified taxa to the species or genus-level. We considered forage lichen as the genera Cladina, Cladonia (excluding species with cup-shaped podetia), Cetraria (excluding C. richardsonii), and Stereocaulon, following Collins et al. (2011). We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area.
-
-
 
 ```{r, include=TRUE}
 
@@ -357,7 +320,7 @@ We identified taxa to the species or genus-level. We considered forage lichen as
 
 ## Ecotypes
 
-Table X. Ecotypes of Chisana caribou herd range, ranked by percent cover.
+Table 1. Ecotypes of Chisana caribou herd range, ranked by percent cover.
 
 +-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
 |       | **Major ecotype**          | **Included detailed ecotypes\*** | **Distinguishing features**                                                                                                                  | **Landcover** |
@@ -419,7 +382,9 @@ Added up the number of transects by litter type and divided by the total number 
 
 Why only one plot in Forest? Merkhofer: "We found that Forest ecotypes made for difficult helicopter landing access and subsequently sampled only one site from this ecotype. Future sampling should be targeted to these under-sampled ecotypes."
 
-```{r, echo=FALSE, tab.cap="Table 2. 'Table 2. Number of plots by ecotype, with mean elevation.'."}
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Number of plots by ecotype.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
 
 # Display the sampling plots
 knitr::kable(sqldf("SELECT Ecotype,Count(Ecotype) as n 
@@ -433,7 +398,9 @@ ORDER BY n DESC"))
 
 A map of the plots is shown below:
 
-```{r, echo=FALSE}
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
+# Increment the figure counter
+FigureCounter = FigureCounter + 1
 
 # Map the units in Leaflet
 leaflet() %>%
@@ -456,14 +423,9 @@ leaflet() %>%
 
 I performed a spatial join of the GPS collar data over the major ecotypes to see where caribou were spending their time. I used the 'Join Attributes by Location' tool in QGIS to add the ecotype to each GPS fix. I then summarized the number of pings by ecotype.
 
-
 # Results
 
 ## Vegetation Cover
-
-The table below was calculated from the point intercept data by summing the total number of TopCanopy hits divided by the total number of hits that were possible.
-
-Question: Merkhofer states "We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area." She did not give a formula. I'm uncertain how to weight means. The tables below give gover as the number of point intercept hits divided by the total number of available tries, unweighted by ecotype area.
 
 ```{r, echo=FALSE}
 
@@ -472,52 +434,52 @@ Question: Merkhofer states "We estimated the percent cover of major life forms a
 Sql = "SELECT ScientificName
 
 -- Now add in the counts of intercepts by stratum by species (UPPER() ensures that the species codes, which are sometimes inconsistent in case, match)
-, (SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v where UPPER(v.TopCanopy) = Upper(s.SpeciesCode))  as TopCanopyIntercepts
-, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = Upper(s.SpeciesCode)) as Lower1Intercepts
-, (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = Upper(s.SpeciesCode)) as Lower2Intercepts
-, (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = Upper(s.SpeciesCode)) as Lower3Intercepts
+, (SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v where UPPER(v.TopCanopy) = UPPER(s.SpeciesCode))  as TopCanopyIntercepts
+, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = UPPER(s.SpeciesCode)) as Lower1Intercepts
+, (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = UPPER(s.SpeciesCode)) as Lower2Intercepts
+, (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = UPPER(s.SpeciesCode)) as Lower3Intercepts
 
 -- Sum the mid-story strata by adding the Lower1-3 strata intercept counts together
-, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = Upper(s.SpeciesCode))
-	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = Upper(s.SpeciesCode))
-	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = Upper(s.SpeciesCode))
+, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = UPPER(s.SpeciesCode))
+	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = UPPER(s.SpeciesCode))
+	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = UPPER(s.SpeciesCode))
 	as LowerInterceptsCombined
 	
 -- Count the number of soil surface intercepts for the current species
-, (SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v where UPPER(v.SoilSurface) = Upper(s.SpeciesCode)) as SoilSurfaceIntercepts
+, (SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v where UPPER(v.SoilSurface) = UPPER(s.SpeciesCode)) as SoilSurfaceIntercepts
 
 -- Total number of possible intercepts 
 ,(SELECT Count(*) as n FROM Dataset_VegData) as TotalHitsPossible 
 
 -- TopCanopy Percent Cover: Add up the total number of intercepts for the current species and divide by the total number of hits that were possible
-, (SELECT Cast(COUNT(TopCanopy) as Float) AS n FROM Dataset_VegData v where UPPER(v.TopCanopy) = Upper(s.SpeciesCode)) 
+, (SELECT Cast(COUNT(TopCanopy) as Float) AS n FROM Dataset_VegData v where UPPER(v.TopCanopy) = UPPER(s.SpeciesCode)) 
     / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_TopCanopy
 
 -- Lower1 Percent Cover: Add up the total number of intercepts for the current species and divide by the total number of hits that were possible
-, Cast((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where Upper(v.Lower1) = Upper(s.SpeciesCode)) As Float) 
+, Cast((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = UPPER(s.SpeciesCode)) As Float) 
     / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_Lower1
 
 -- Lower2 Percent Cover: Add up the total number of intercepts for the current species and divide by the total number of hits that were possible
-, Cast((SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where Upper(v.Lower2) = Upper(s.SpeciesCode)) As Float) 
+, Cast((SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = UPPER(s.SpeciesCode)) As Float) 
     / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_Lower2
 
 -- Lower3 Percent Cover: Add up the total number of intercepts and divide by the total number of hits that were possible
-, Cast((SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where Upper(v.Lower3) = Upper(s.SpeciesCode)) As Float) 
+, Cast((SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = UPPER(s.SpeciesCode)) As Float) 
     / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_Lower3
 
 -- Lower intercepts combined cover: Add up all the hits for Lower1-3 and divide by the total number of hits that were possible times 3
 -- Cast the numerator from int to float so that the result gets decimal places rather than being an int
-, Cast(((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where Upper(v.Lower1) = Upper(s.SpeciesCode)) -- Lower1 total hits
-	+ (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where Upper(v.Lower2) = Upper(s.SpeciesCode)) -- Lower2 total hits
-	+ (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where Upper(v.Lower3) = Upper(s.SpeciesCode))) As Float) -- Lower3 total hits
+, Cast(((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v where UPPER(v.Lower1) = UPPER(s.SpeciesCode)) -- Lower1 total hits
+	+ (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v where UPPER(v.Lower2) = UPPER(s.SpeciesCode)) -- Lower2 total hits
+	+ (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v where UPPER(v.Lower3) = UPPER(s.SpeciesCode))) As Float) -- Lower3 total hits
 	 / ((SELECT Count(*) as n FROM Dataset_VegData) * 3) * 100 -- Total hits possible times 3 for the three strata, Lower1-3
 	as PctCover_LowerInterceptsCombined
 
 -- Soil Surface Percent Cover: Add up the total number of intercepts and divide by the total number of hits that were possible
-, Cast((SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v where Upper(v.SoilSurface) = Upper(s.SpeciesCode)) As Float) 
+, Cast((SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v where UPPER(v.SoilSurface) = UPPER(s.SpeciesCode)) As Float) 
     / ((SELECT Count(*) as n FROM Dataset_VegData)) * 100 as PctCover_SoilSurface
 
-,Upper(SpeciesCode)
+,UPPER(SpeciesCode)
 ,GrowthHabitSub
 FROM SpeciesList s
 ORDER BY ScientificName"
@@ -535,9 +497,18 @@ CoverData = sqldf(Sql)
 
 ### Foliar cover
 
-* Not weighted by ecotype cover
+\*Unweighted by ecotype area.
 
-```{r, echo=FALSE,tab.cap="Figure 1. Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%."}
+Question: Merkhofer states "We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area." She did not give a formula. I'm uncertain how to weight means. The tables below give gover as the number of point intercept hits divided by the total number of available tries, unweighted by ecotype area.]
+
+Results:
+
+-   Overall foliar plant cover in the vegetation plots we sampled was dominated by dwarf birch, sedges, *Dryas* and willow, species emblematic of alpine tundra.
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
 # Print the foliar (TopCanopy stratum) cover.
 knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_TopCanopy as [% cover] 
 FROM CoverData 
@@ -549,9 +520,14 @@ ORDER BY PctCover_TopCanopy DESC"))
 
 ### Mid-story Cover
 
-* Not weighted by ecotype cover. This may not be useful, few hits. LM ignored these data.
+-   Mid-story percent cover values are very low because of diminishing likelihood of a hit in Lower2 and exponentially diminishing likelihood of a hit on Lower3. We can't just sum Lower1-3 and divide by the number of hit opportunities. LM ignored Lower1-3, probably for this reason? Or should we just use Lower1?
 
-```{r, echo=FALSE,tab.cap="Figure 1. Percent mid-story cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%."}
+\*Unweighted by ecotype area.
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent mid-story cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
 # Print the mid-story (Lower1-3 strata) cover.
 knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_LowerInterceptsCombined as [% cover] 
 FROM CoverData 
@@ -562,7 +538,12 @@ ORDER BY PctCover_LowerInterceptsCombined DESC"))
 
 ### Basal Cover
 
-```{r, echo=FALSE,tab.cap="Table x. Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%."}
+\*Unweighted by ecotype area.
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
 # Print the basal (SoilSurface stratum) cover.
 knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
 FROM CoverData 
@@ -574,59 +555,108 @@ ORDER BY PctCover_SoilSurface DESC"))
 
 ```
 
+## Lichen Layer Thickness and Biomass
 
-## Lichen Biomass
+NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species as B=1135.6T where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha).
+,1135.6 * AVG(IFNULL(v.LichenHeight,0)) as [Estimated lichen biomass (kg/ha)" without really knowing much about that methodology.
 
-```{r, echo=FALSE,tab.cap="Table x. Percent ground cover of moss and lichen in the range of the Chisana caribou herd. Biomass is estimated as the mean lichen thickness (cm) multiplied by 1135.6 (Moen et al. (2007)."}
+Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any species of lichens in their lichen height measument at each point intercept ("We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present").
+
+
+```{r, echo=FALSE}
 
 # Get the lichen thickness and biomass data
 Sql="SELECT Ecotype
-, AVG(IFNULL(v.LichenHeight, 0)) AS [Mean lichen thickness (cm)]
-, MIN(IFNULL(v.LichenHeight, 0)) AS Min
-, MAX(IFNULL(v.LichenHeight, 0)) AS Max
-, STDEV(IFNULL(v.LichenHeight, 0)) AS SD
+
+-- NOTE: I used IFNULL() to convert NULL values to zero because data collectors left lichen height field blank where no lichens were observed on transect points.
+-- LM's methods section states that lichen height was measured at each point intercept, therefore NULLs should, in fact, be zeros.
+, AVG(IFNULL(v.LichenHeight,0)) AS [Mean lichen thickness (cm)]
+, MIN(IFNULL(v.LichenHeight,0)) AS Min
+, MAX(IFNULL(v.LichenHeight,0)) AS Max
+, STDEV(IFNULL(v.LichenHeight,0)) AS SD
 
 -- We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species as B=1135.6T where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha).
-,1135.6 * AVG(IFNULL(v.LichenHeight, 0)) as [Mean lichen biomass (kg/ha)] 
+,1135.6 * AVG(IFNULL(v.LichenHeight,0)) as [Estimated lichen biomass (kg/ha)] 
 
 -- Biomass estimate lower by one standard deviation, the case statement returns zero in cases where the mean lichen thickness minus one standard deviation is zero in which case biomass should be zero
 ,Case 
-  When AVG(IFNULL(v.LichenHeight, 0)) - STDEV(IFNULL(v.LichenHeight, 0)) < 0 Then 0 
-  Else AVG(IFNULL(v.LichenHeight, 0)) - STDEV(IFNULL(v.LichenHeight, 0)) * 1135.6 
+  When AVG(IFNULL(v.LichenHeight,0)) - STDEV(IFNULL(v.LichenHeight,0)) < 0 Then 0 
+  Else AVG(IFNULL(v.LichenHeight,0)) - STDEV(IFNULL(v.LichenHeight,0)) * 1135.6 
  End As [Biomass lower estimate] 
 
 -- Biomass estimate upper by one standard deviation
-,1135.6 * (AVG(IFNULL(v.LichenHeight, 0)) + STDEV(IFNULL(v.LichenHeight, 0))) as [Biomass upper estimate] 
-
+,1135.6 * (AVG(IFNULL(v.LichenHeight,0)) + STDEV(IFNULL(v.LichenHeight,0))) as [Biomass upper estimate] 
 
 , COUNT(*) AS n
+, COUNT(DISTINCT Plot) as [Number of plots]
+,EcotypeID
 FROM Dataset_VegData v 
-GROUP BY Ecotype
---ORDER BY [Mean lichen biomass]  DESC"
+GROUP BY Ecotype,EcotypeID
+ORDER BY [Mean lichen thickness (cm)]  DESC"
+
 Biomass = sqldf(Sql)
 
 ```
 
-```{r, echo=FALSE,fig.cap="Figure X. Lichen biomass (kg/ha) by ecotype."}
-# Plot the lichen biomass (thickness * 1135.6 (Moen et al. (2007))
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+# Output the lichen thickness and biomass stats
+knitr::kable(sqldf("SELECT Ecotype,[Mean lichen thickness (cm)],Min,Max,SD,n,[Number of plots] FROM Biomass ORDER BY [Mean lichen thickness (cm)] DESC"), digits = 2)
+
+```
+
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by ecotype. Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+
 ggplot(Biomass) +
-  geom_col(aes(x=Ecotype,y=`Mean lichen biomass (kg/ha)`)) +
-  geom_errorbar(aes(x=Ecotype,ymin=`Biomass lower estimate`,ymax=`Biomass upper estimate`)) +
+  geom_col(aes(x=Ecotype,y=`Mean lichen thickness (cm)`),fill='lightgray',color='darkgray') +
+  geom_errorbar(aes(x=Ecotype,ymin=ifelse(`Mean lichen thickness (cm)` - SD < 0,0,`Mean lichen thickness (cm)` - SD),ymax=`Mean lichen thickness (cm)` + SD)) +
+  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)`,label=round(`Mean lichen thickness (cm)`,digits=2)) ) +
+  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)` + .5,label=EcotypeID ) ) +
+  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)` + .8,label=paste("(",`Number of plots`,")",sep="") ) ) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
 ```
 
-```{r, echo=FALSE,tab.cap="Table X. Lichen mat thickness (cm) by ecotype."}
+# KABLE IN THE BIOMASS DATA TABLE HERE AND FINISH THE PLOT
+
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) and estimated biomass (kg/ha) by ecotype in the range of the Chisana caribou herd. Biomass is estimated as the mean lichen thickness (cm) multiplied by 1135.6 (Moen et al. (2007). Upper and lower biomass estimates are calculated by adding or subtracting one standard deviation from the mean lichen thickness and multiplying by 1135.6, respectively. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+
+# Increment the table counter
+TableCounter = TableCounter + 1
+
 # Output the lichen thickness and biomass stats
-knitr::kable(Biomass, digits = 1)
+knitr::kable(sqldf("SELECT Ecotype
+,[Estimated lichen biomass (kg/ha)]
+,[Biomass lower estimate] As [Biomass lower estimate (kg/ha)]
+,[Biomass upper estimate]  As [Biomass upper estimate (kg/ha)]
+,n,[Number of plots]
+FROM Biomass ORDER BY [Mean lichen thickness (cm)] DESC"), digits = 2)
+
+```
+
+
+
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by ecotype.",sep="")}
+
+ggplot(Biomass) +
+  geom_col(aes(x=Ecotype,y=`Estimated lichen biomass (kg/ha)`),fill='lightgray',color='darkgray') +
+  geom_errorbar(aes(x=Ecotype,ymin=`Biomass lower estimate`,ymax=`Biomass upper estimate`)) +
+  geom_text(aes(x=Ecotype,y=`Estimated lichen biomass (kg/ha)`,label= round(`Estimated lichen biomass (kg/ha)`,digits=2))) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
 
 ```
 
 ## Litter
 
-```{r, echo=FALSE,tab.cap="Table X. Litter dominance (count of transects by litter type divided by total number of transects."}
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Litter dominance (count of transects by litter type divided by total number of transects.",sep="")}
 
+# Increment the table counter
+TableCounter = TableCounter + 1
 
 # Get a list of distinct LitterTypes to use in queries that follow
 LitterTypes = sqldf("SELECT DISTINCT NTransectLitterType As LitterType FROM Plots 
@@ -673,8 +703,6 @@ TotalTransects = LitterType[1,"TotalNumberOfTransects"]
 
 ```
 
-
-
 ## Caribou Ecotype Preference
 
 ```{r, echo=FALSE}
@@ -710,7 +738,9 @@ EcoPref = read.csv(paste(DeliverablesDirectory,"CV-10 Caribou Ecotype Preference
 
 ### Ecotype preference
 
-```{r, echo=FALSE,tab.cap="Table X. Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype."}
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
 
 Sql = "SELECT Ecotype
 ,Count(*) as [GPS Fixes] 
@@ -732,7 +762,7 @@ Total GPS fixes = `r TotalGPSFixes`
 
 ### Ecotype Preference By Month
 
-```{r, echo=FALSE,fig.cap="Figure X. Chisana caribou ecotype preference by month as determined from GPS collar data."}
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Chisana caribou ecotype preference by month as determined from GPS collar data.",sep="")}
 # By Month
 Sql = "SELECT Month, Ecotype,Count(*) as [GPS Fixes]
 FROM EcoPref
@@ -754,11 +784,14 @@ ggplot(EcoPrefByMonth) +
 
 ## Fecal Pellet Analysis
 
-```{r, echo=FALSE,tab.cap="Table X. Fecal pellet composition for plant categories greater than one percent."}
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition for plant categories greater than one percent.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
 Sql = "SELECT Plant,Avg(PctComposition) as Mean,Count(*) as n 
 FROM PelletData 
 GROUP BY Plant 
-HAVING Avg(PctComposition) > 1
+--HAVING Avg(PctComposition) > 1
 ORDER BY Avg(PctComposition) DESC"
 sqldf(Sql)
 ```
@@ -767,63 +800,270 @@ sqldf(Sql)
 
 # Appendix A: Sampling Plots
 
-```{r, echo=FALSE}
-knitr::kable(Plots,caption='Table ?. Sampling plots.')
+## List Of Plots
+
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Sampling plots.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+knitr::kable(sqldf("SELECT Plot,Ecotype,EstablishDate,Elev_m as [Elevation (m)],Latitude,Longitude FROM Plots ORDER BY Plot"),caption='Table ?. Sampling plots.')
+
 ```
 
+## Elevational Profiles
+
+```{r, echo=FALSE,fig.cap=paste("Table ",TableCounter,". Sampling plots elevation profile by ecotype. Error bars represent the minimum and maximum plot elevation for each ecotype.",sep="")}
+
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+ggplot(sqldf("SELECT Ecotype,Avg(Elev_m) as [Mean elevation (m)],Min(Elev_m) as [Min. elevation (m)],Max(Elev_m) as [Max. elevation (m)] FROM Plots Group By Ecotype")) +
+  geom_point(aes(x=reorder(Ecotype,`Mean elevation (m)`),y=`Mean elevation (m)`)) +
+  geom_errorbar(aes(x=reorder(Ecotype,`Mean elevation (m)`),ymin=`Min. elevation (m)`,ymax=`Max. elevation (m)`)) +
+  ggtitle(paste("Ecotypes elevation profile ",sep="")) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ylab("Elevation (m)") +
+  xlab("Ecotype")
+
+```
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Sampling plots elevation profile by plot.",sep="")}
+
+ggplot(Plots) +
+  geom_point(aes(x=reorder(Plot,Elev_m),y=Elev_m,shape=Ecotype)) +
+  ggtitle(paste("Sampling plots elevation profile ",sep="")) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ylab("Elevation (m)") +
+  xlab("Plot")
+
+```
+
+# Appendix B: Vegetation Summary By Ecotype
 
 ```{r, echo=FALSE, results='asis'}
-# Appendix B: Vegetation Summary By Plot
-# Holding off on developing this query until I'm sure it's needed
-# # Function to dump out a report section showing vegetation characterization
-# GetPlotVegSummary = function(Plot){
-#   
-#   # Header and text
-#   cat("# Vegetation Summary of Plot ",Plot,"  \n\n")
-#   cat("  \n\n")
-#   cat("Vegetation Summary of Plot ",Plot," \n\n")
-#   cat("  \n\n")
-#   
-# 
-#   
-#   # Dump out the composition table
-#   print(,digits=1)
-#   cat("  \n\n")
-# }
-# 
-# Sql = "SELECT e.Ecotype, s.ScientificName
-# -- Now add in the counts of intercepts by stratum by species (UPPER() ensures that the species codes, which are sometimes inconsistent in case, match)
-# , (SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.TopCanopy) = Upper(s.SpeciesCode))  as TopCanopyIntercepts
-# , (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = Upper(s.SpeciesCode)) as Lower1Intercepts
-# , (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = Upper(s.SpeciesCode)) as Lower2Intercepts
-# , (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = Upper(s.SpeciesCode)) as Lower3Intercepts
-# 
-# -- Sum the mid-story strata by adding the Lower1-3 strata intercept counts together
-# , (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = Upper(s.SpeciesCode))
-# 	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = Upper(s.SpeciesCode))
-# 	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = Upper(s.SpeciesCode))
-# 	as LowerInterceptsCombined
-# 
-# -- Count the number of soil surface intercepts for the current species
-# , (SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.SoilSurface) = Upper(s.SpeciesCode)) as SoilSurfaceIntercepts
-# 
-# -- Total number of possible intercepts 
-# ,(SELECT Count(*) as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) as TotalHitsPossible 
-# 
-# FROM SpeciesList s
-# CROSS JOIN Ecotypes e
-# 
-# WHERE e.Ecotype = 'Alpine Dwarf Shrub/Barrens'
-# 
-# ORDER BY e.Ecotype, s.ScientificName"
-# sqldf(Sql)
-# 
-# 
-# 
-# GetPlotVegSummary('ADD01')
+
+# This code block generates a table of vegetation point intercept counts by plant species and ecotype and generates percent cover for each strata (TopCanpoy, Lower1-3, SoilSurface)
+  
+# Build the query
+# Start by building a set of all ecotypes by all species
+Sql = "SELECT e.Ecotype, s.ScientificName,s.GrowthHabitSub
+
+--, (SELECT Count(*) FROM Dataset_VegData v WHERE v.Ecotype=e.Ecotype And  TRIM(v.Lower1)='')  as Lower1NullIntercepts -- Note: IS NULL doesn't seem to work as a filter on the Dataset_Veg data frame. The NULLs seem to have been converted to blanks when the data were read.csved  in from file
+
+-- Now add in the counts of intercepts by stratum by species [UPPER() ensures that the species codes, which are sometimes inconsistent in case, match]
+, (SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.TopCanopy) = UPPER(s.SpeciesCode) And UPPER(v.TopCanopy) = UPPER(s.SpeciesCode))  as TopCanopyIntercepts
+
+, (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = UPPER(s.SpeciesCode)) as Lower1Intercepts
+
+, (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = UPPER(s.SpeciesCode)) as Lower2Intercepts
+, (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = UPPER(s.SpeciesCode)) as Lower3Intercepts
+
+-- Sum the mid-story strata by adding the Lower1-3 strata intercept counts together
+-- , (SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = UPPER(s.SpeciesCode))
+-- 	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = UPPER(s.SpeciesCode))
+-- 	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = UPPER(s.SpeciesCode))
+-- 	as LowerInterceptsCombined
+
+-- Count the number of soil surface intercepts for the current species
+, (SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.SoilSurface) = UPPER(s.SpeciesCode)) as SoilSurfaceIntercepts
+
+-- Calculate foliar percent cover for each ecotype by dividing the intercepts by species by the number of possible intercepts
+, CAST((SELECT COUNT(TopCanopy) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.TopCanopy) = UPPER(s.SpeciesCode)) As Float) 
+  / (SELECT Count(*) as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) * 100
+as PctCover_TopCanopy
+
+-- Calculate Lower1 percent cover for each ecotype by dividing the intercepts by species by the number of possible intercepts
+, CAST((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = UPPER(s.SpeciesCode)) As Float) 
+  / (SELECT Count(*) as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) * 100
+as PctCover_Lower1
+
+-- Calculate soil surface percent cover for each ecotype by dividing the intercepts by species by the number of possible intercepts
+, CAST((SELECT COUNT(SoilSurface) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.SoilSurface) = UPPER(s.SpeciesCode)) As Float) 
+  / (SELECT Count(*) as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) * 100
+as PctCover_SoilSurface
+
+-- Calculate mid-story (Lower1-3) percent cover for each ecotype by dividing the intercepts by species by the number of possible intercepts
+-- NOTE: This doesn't work because Lower2 and 3 are essentially 'blocked' by Lower1, diminishing the odds of a 'hit'. The result calculated below gave misleading very lowe percent cover
+--, CAST((SELECT COUNT(Lower1) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower1) = UPPER(s.SpeciesCode))
+--	  + (SELECT COUNT(Lower2) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower2) = UPPER(s.SpeciesCode))
+--	  + (SELECT COUNT(Lower3) AS n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype And UPPER(v.Lower3) = UPPER(s.SpeciesCode)) As Float)
+--	  / (SELECT Count(*) * 3 as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) -- Multiply the denominator by 3 because there are three mid-story levels
+--	   * 100 as PctCover_LowerInterceptsCombined
+
+-- Total number of possible intercepts for each ecotype
+,(SELECT Count(*) as n FROM Dataset_VegData v WHERE v.Ecotype = e.Ecotype) as TotalHitsPossible
+
+FROM SpeciesList s
+CROSS JOIN Ecotypes e
+ORDER BY e.Ecotype, s.ScientificName"
+
+# Execute the query into a data frame
+CoverDataByEcotype = sqldf(Sql)
+#write.table(CoverDataByEcotype,file="C:/temp/zCoverByEcotype.csv",quote=TRUE,row.names = FALSE,col.names=TRUE,sep=",")
+
+
 
 ```
 
+```{r, echo=FALSE, results='asis'}
+
+# Function to dump out a report section characterizing each ecotype
+GetEcotypeSection = function(Ecotype){
+
+    # Header and text
+  cat("# ",Ecotype,"  \n\n")
+  cat("  \n\n")
+  
+  
+  # Ecotype description
+  cat("## Distinguishing features and cover.  \n\n")
+  EcotypeDescription = sqldf("SELECT Ecotype,DistinguishingFeatures as [Distinguishing features],Cover as [Percent of Chisana range] FROM Ecotypes WHERE Ecotype='Forest'")
+  cat(EcotypeDescription$`Distinguishing features`," \n\n")
+  cat("The",Ecotype,"ecotype covers approximately",EcotypeDescription[1,3],"% of the Chisana caribou herd range. \n\n")
+  cat("  \n\n")
+  
+  
+  
+  
+  # Plots in the ecotype and their sampling dates and attributes
+  cat("## Sampling Plots.  \n\n")
+  
+  PlotSummary = sqldf(paste("SELECT DISTINCT Dataset_VegData.Plot,Plots.Elev_m as [Elevation (m)],Plots.EstablishDate as [Sampling Date]
+    FROM Dataset_VegData 
+    JOIN Plots on Plots.Plot = Dataset_VegData.Plot 
+    WHERE Dataset_VegData.Ecotype = '",Ecotype,"' 
+    ORDER BY Dataset_VegData.Plot",sep=""))
+  # Add in a total row
+  cat("  \n\n")
+  cat("Table ",TableCounter,". Plots And sampling dates in the ",Ecotype," ecotype.  \n\n")
+  print(knitr::kable(PlotSummary,digits=1))
+  cat("  \n\n")
+  cat("Mean elevation (m) = ",round(mean(PlotSummary$`Elevation (m)`),1),", number of plots = ",nrow(PlotSummary),"  \n\n")
+  TableCounter = TableCounter + 1
+  
+
+  
+  
+  
+  
+  
+  # Dump out the foliar cover
+  cat("## Foliar Cover  \n\n")
+  cat("Table ",TableCounter,". Plots And sampling dates in the ",Ecotype," ecotype.  \n\n")
+  Sql = paste("SELECT ScientificName,TopCanopyIntercepts as Hits,TotalHitsPossible as Opportunities,CAST(PctCover_TopCanopy As Float) As [% cover] 
+      FROM CoverDataByEcotype 
+      WHERE Ecotype='",Ecotype,"' And [% cover] > 1 
+      ORDER BY [% cover] DESC",sep="")
+  Cover = sqldf(Sql)
+  
+  # Plot the foliar plant cover
+  cat("  \n\n")
+  print(
+    ggplot(Cover) +
+      geom_col(aes(x=reorder(ScientificName,-`% cover`),y=`% cover`)) +
+      ggtitle(paste("Foliar Cover: ",Ecotype," Ecotype",sep="")) +
+      theme_minimal() +
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+      xlab("Taxa") +
+      ylab("% cover")
+  )
+  cat(" Figure ",FigureCounter,". Foliar percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
+  cat("  \n\n")
+  FigureCounter = FigureCounter + 1
+  
+  # Foliar plant cover summary table
+  Cover[nrow(Cover) + 1,] = c("TOTAL",sum(Cover$Hits),'',sum(Cover$`% cover`))
+  cat("Table ",TableCounter,". Foliar cover in the ",Ecotype," ecotype.  \n\n")
+  print(knitr::kable(Cover,digits=1))
+  cat("  \n\n")
+  TableCounter = TableCounter + 1
+  
+  
+  
+  
+  
+  # Dump out the midstory cover. NOTE: The table below only considers Lower1 intercepts - ignores Lower2 and 3.
+  cat("## Mid-Story Cover  \n\n")
+  cat("  \n\n")
+  Sql = paste("SELECT ScientificName,Lower1Intercepts as Hits,TotalHitsPossible as Opportunities,CAST(PctCover_Lower1 As Float) As [% cover]
+    FROM CoverDataByEcotype 
+    WHERE Ecotype='",Ecotype,"' And [% cover] > 1 
+    ORDER BY [% cover] DESC",sep="")
+  Cover = sqldf(Sql)
+  
+    # Plot the soil surface cover
+  cat("  \n\n")
+  print(
+    ggplot(Cover) +
+      geom_col(aes(x=reorder(ScientificName,-`% cover`),y=`% cover`)) +
+      ggtitle(paste("Mid-story cover: ",Ecotype,sep="")) +
+      theme_minimal() +
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+      xlab("Taxa") +
+      ylab("% cover")
+  )
+    cat(" Figure ",FigureCounter,". Mid-story percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
+    cat("  \n\n")
+    FigureCounter = FigureCounter + 1
+  
+  # Mid-story cover summary table
+  Cover[nrow(Cover) + 1,] = c("TOTAL",sum(Cover$Hits),'',sum(Cover$`% cover`))
+  cat("Table ",TableCounter,". Midstory cover in the ",Ecotype," ecotype.  \n\n")
+  print(knitr::kable(Cover,digits=1))
+  cat("  \n\n")
+  TableCounter = TableCounter + 1
+  
+  
+  
+  
+  
+  # Dump out the soil surface cover. NOTE: The table below only considers Lower1 intercepts - ignores Lower2 and 3.
+  cat("## Soil Surface Cover  \n\n")
+  cat("  \n\n")
+  Sql = paste("SELECT ScientificName,SoilSurfaceIntercepts as Hits,TotalHitsPossible as Opportunities,CAST(PctCover_SoilSurface As Float) As [% cover] 
+    FROM CoverDataByEcotype 
+    WHERE Ecotype='",Ecotype,"' And [% cover] > 0 
+    ORDER BY [% cover] DESC",sep="")
+  Cover = sqldf(Sql)
+  
+  # Plot the soil surface cover
+  cat("  \n\n")
+  print(
+    ggplot(Cover) +
+      geom_col(aes(x=reorder(ScientificName,-`% cover`),y=`% cover`)) +
+      ggtitle(paste("Soil surface cover: ",Ecotype,sep="")) +
+      xlab("Point intercept") +
+      theme_minimal() +
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+      xlab("Taxa") +
+      ylab("% cover")
+  )
+      cat(" Figure B-3. Soil surface percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
+    cat("  \n\n")
+    FigureCounter = FigureCounter + 1
+  
+  # Add in a total row and output
+  Cover[nrow(Cover) + 1,] = c("TOTAL",sum(Cover$Hits),'',sum(Cover$`% cover`))
+  cat("Table ",TableCounter,". Soil surface cover in the ",Ecotype," ecotype.  \n\n")
+  print(knitr::kable(Cover,digits=1))
+  cat("  \n\n")
+  TableCounter = TableCounter + 1
+
+}
+
+
+# Loop through the ecotypes and generate a report section showing the vegetation composition, foliar, midstory and soil surface, etc.
+Samples = sqldf("SELECT Ecotype FROM Ecotypes ORDER BY ECotype")
+for(i in 1:nrow(Samples)) {       
+  Ecotype = Ecotypes$Ecotype[i]
+  GetEcotypeSection(Ecotype)
+}
+
+# GetEcotypeSection('Alpine Meadow')
+
+```
 
 # Appendix B: Fecal Pellet Results By Sample
 
@@ -832,7 +1072,7 @@ knitr::kable(Plots,caption='Table ?. Sampling plots.')
 GetPelletCompositionSummary = function(Sample){
   
   # Header and text
-  cat("# Fecal Pellet Sample ",Sample,"  \n\n")
+  cat("## Fecal Pellet Sample ",Sample,"  \n\n")
   cat("  \n\n")
   cat("Fecal pellet composition summary:  \n\n")
   cat("  \n\n")
@@ -844,6 +1084,7 @@ GetPelletCompositionSummary = function(Sample){
   ORDER BY Sample, PctComposition DESC",sep="")
   
   # Dump out the composition table
+  cat("Table ",TableCounter,". Fecal pellect composition, ",Sample,"  \n\n")
   print(knitr::kable(sqldf(Sql)),digits=1)
   cat("  \n\n")
 }
@@ -860,25 +1101,15 @@ for(i in 1:nrow(Samples)) {
 
 ```
 
-
-
 # Appendix ?: Litter Type Summary
 
-```{r, echo=FALSE, results='asis'}
+```{r, echo=FALSE, results='asis',tab.cap=paste("Table ",TableCounter,"Litter composition by transect.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
 
 knitr::kable(LitterType,digits=1)
 
 ```
-
-
-
-## Column definitions
-
-```{r, echo=FALSE,tab.cap="Table X. Chisana vegetation dataset column definitions."}
-#knitr::kable(Metadata)
-```
-
-
 
 # References
 
@@ -919,6 +1150,3 @@ Post, E., & Klein, D. R. (1999). Caribou calf production and seasonal range qual
 Swanson, J. D., & Barker, M. H. W. (1992). Assessment of Alaska reindeer populations and range conditions. *Rangifer*, *12*(1), 33-43.
 
 Valkenburg, P. (1996). Population decline in the Delta caribou herd with reference to other Alaskan herds. *Rangifer*, *16*(4), 53-62.
-
-
-
