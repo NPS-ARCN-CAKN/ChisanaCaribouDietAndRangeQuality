@@ -289,7 +289,11 @@ We focus on the core range of the CCH within WRST National Park and Preserve bou
 
 We chose to proportionally allocate sampling sites to six major ecotypes within the study area (Table 1). Major ecotypes were developed by consolidating the detailed ecotypes mapped in WRST by Jorgenson et al. (2008) using satellite imagery. We grouped Jorgenson et al. ecotypes into groups based on the similarity of their definitions and geographic size (Table 1; Fig. 2). We included all ecotypes except for glaciated barrens. In our study region, the three most common ecotypes by percent cover are Alpine Dwarf Shrub/Barrens (28.1%), Subalpine Wood/Shrub (28.1%), and Alpine Sedge-Dwarf Shrub (24.3%). Riverine, Alpine Meadow, and Forest ecotypes make up the remaining 19.4% of the region.
 
+![](images/clipboard-3865551050.png)
+
 Figure 1. Defining the core range of the Chisana caribou herd in northeastern WRST Park and Preserve. Points are radio collar signals recorded from 1988 to 2015 during summer or winter seasons. The core range (yellow border) was selected to include the majority of radio signals within WRST (green border).
+
+![](images/clipboard-954225469.png)
 
 Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST Park and Preserve (Table 1). Map based on ecotype landcover developed by Jorgenson et al. (2008).
 
@@ -606,6 +610,10 @@ Biomass = sqldf(Sql)
 ```
 
 ```{r}
+
+# Moen et al. (2007) lichen thickness to biomass conversion
+LichenHtToBiomassConversionFactor = 1135.6 
+
 # Start by calculating mean lichen heights by plot
 MeanLichenHeightByPlot = Dataset_VegData %>% select(Ecotype,Plot,Line,PointLoc,LichenHeight) %>% 
   filter(is.na(LichenHeight) == FALSE) %>% 
@@ -615,16 +623,19 @@ MeanLichenHeightByPlot = Dataset_VegData %>% select(Ecotype,Plot,Line,PointLoc,L
     ,Transects=n_distinct(Line)
     ,NonNullLichenHeights=n()
     ,`Mean lichen thickness (cm)`=mean(LichenHeight)
-    ,MeanHt=mean(LichenHeight) # This column duplicates the one above but dplyr wouldn't calculate an SD on a column named `Mean lichen thickness (cm)` so I calculated it below on MeanHt instead
-    ,SD=sd(LichenHeight)
+    ,`SD (thickness)`=            sd(LichenHeight)
+    ,`Estimated biomass (kg/ha)`= mean(`Mean lichen thickness (cm)` * LichenHtToBiomassConversionFactor)
+    ,`SD (biomass)`=              sd(LichenHeight * LichenHtToBiomassConversionFactor,na.rm=TRUE)
   ) %>%
   arrange(Plot)
 
-# Calculate estimated biomass and add it to the MeanLichenHeightByPlot table
-MeanLichenHeightByPlot$`Estimated lichen biomass (kg/ha)` = MeanLichenHeightByPlot$MeanHt * 1135.6 # Moen et al. (2007)
+
 
 # Join the results to the Plots table in order by add the Ecotype back in so we can calculate statistics by ecotype
-MeanLichenHeightByPlot = inner_join(MeanLichenHeightByPlot,Plots,by='Plot') %>% select(Ecotype,Plot,Plots,Transects,NonNullLichenHeights,`Mean lichen thickness (cm)`,SD,MeanHt)
+MeanLichenHeightByPlot = inner_join(MeanLichenHeightByPlot,Plots,by='Plot') %>% select(Ecotype,Plot,Plots,Transects,NonNullLichenHeights,`Mean lichen thickness (cm)`,`SD (thickness)`,`Estimated biomass (kg/ha)`,`SD (biomass)`)
+
+# Weird fix needed here: I duplicated the lichen thickness column as MeanHt because the dplyr standard deviation calculations below refused to work on a column named `Mean lichen thickness (cm)`
+MeanLichenHeightByPlot$MeanHt = MeanLichenHeightByPlot$`Mean lichen thickness (cm)` 
 
 # Next calculate mean lichen height by ecotype (mean of mean lichen height by plot)
 MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>% 
@@ -633,40 +644,41 @@ MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>%
     Plots=sum(Plots)
     ,Transects=sum(Transects)
     ,`Mean lichen thickness (cm)`= mean(`Mean lichen thickness (cm)`)
-    ,SD=sd(MeanHt,na.rm=TRUE) # Note: SD is calculated on MeanHt instead of `Mean lichen thickness (cm)` because dplyr wouldn't give me an SD on that column name so I had to create a duplicate column
-    ,`Estimated biomass (kg/ha)`=mean(`Estimated lichen biomass (kg/ha)`)
+    ,`SD (thickness)`=sd(MeanHt,na.rm=TRUE) # Note: SD is calculated on MeanHt instead of `Mean lichen thickness (cm)` because dplyr wouldn't give me an SD on that column name so I had to create a duplicate column
+    ,`Estimated biomass (kg/ha)`=mean(`Mean lichen thickness (cm)` * LichenHtToBiomassConversionFactor)
+    ,`SD (biomass)`=sd(MeanHt * LichenHtToBiomassConversionFactor,na.rm=TRUE)
     ,n=sum(NonNullLichenHeights)
   )
 
 ```
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
-# Increment the table counter
-TableCounter = TableCounter + 1
-
-# Output the lichen thickness by ecotype
-knitr::kable(MeanLichenHeightByEcotype, digits = 2)
-
-# Output the lichen thickness by plot
-#knitr::kable(MeanLichenHeightByPlot, digits = 2)
-
-```
-
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by ecotype. Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
 ggplot(MeanLichenHeightByEcotype) +
   # Mean lichen height column chart
   geom_col(aes(x=Ecotype,y=`Mean lichen thickness (cm)`),fill='lightgray',color='darkgray') +
   
   # Error bars as standard deviation
-  geom_errorbar(aes(x=Ecotype,ymin=`Mean lichen thickness (cm)` - SD,ymax=`Mean lichen thickness (cm)` + SD),width=0.2) +
-  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)`,label=round(`Mean lichen thickness (cm)`,digits=2)) ) +
+  geom_errorbar(aes(x=Ecotype,ymin=`Mean lichen thickness (cm)` - `SD (thickness)`,ymax=`Mean lichen thickness (cm)` + `SD (thickness)`),width=0.2) +
+  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)`
+                ,label=paste( round(`Mean lichen thickness (cm)`,digits=2)," cm\n(",round(`Estimated biomass (kg/ha)`,digits=2)," kg/Ha)",sep=""))
+    ,size=3,vjust=2.2) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
   ggtitle("Mean lichen thickness by ecotype")
 
 #Increment the figure counter
 FigureCounter=FigureCounter+1
+
+```
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
+
+# Output the lichen thickness by ecotype
+knitr::kable(MeanLichenHeightByEcotype, digits = 2)
+
+# Increment the table counter
+TableCounter = TableCounter + 1
 
 ```
 
@@ -677,7 +689,10 @@ ggplot(MeanLichenHeightByPlot) +
   geom_col(aes(x=Plot,y=`Mean lichen thickness (cm)`,fill=Ecotype)) +
   
   # Error bars as standard deviation
-  geom_errorbar(aes(x=Plot,ymin=ifelse(`Mean lichen thickness (cm)` - SD < 0,0,`Mean lichen thickness (cm)` - SD),ymax=`Mean lichen thickness (cm)` + SD),width=0.5,color='gray') +
+  geom_errorbar(aes(
+    x=Plot
+    ,ymin=ifelse(`Mean lichen thickness (cm)` - `SD (thickness)` < 0,0,`Mean lichen thickness (cm)` - `SD (thickness)`)
+    ,ymax=`Mean lichen thickness (cm)` + `SD (thickness)`),width=0.5,color='gray') +
   geom_text(aes(x=Plot,y=`Mean lichen thickness (cm)`,label=round(`Mean lichen thickness (cm)`,digits=2)) ) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))  +
@@ -687,61 +702,14 @@ ggplot(MeanLichenHeightByPlot) +
 FigureCounter=FigureCounter+1
 ```
 
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen biomass (kg/ha) by ecotype (Moen et al., 2007) Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
-
-ggplot(MeanLichenHeightByEcotype) +
-  # Mean lichen height column chart
-  geom_col(aes(x=Ecotype,y=`Estimated biomass (kg/ha)`),fill='lightgray',color='darkgray') +
-  
-  # Error bars as standard deviation
-  #geom_errorbar(aes(x=Ecotype,ymin=`Estimated biomass (kg/ha)` - SD,ymax=`Estimated biomass (kg/ha)` + SD),width=0.2) +
-  geom_text(aes(x=Ecotype,y=`Estimated biomass (kg/ha)`,label=round(`Estimated biomass (kg/ha)`,digits=2)) ) +
-  theme_minimal() +
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-  ggtitle("Estimated lichen biomass (kg/ha) by ecotype")
-
-#Increment the figure counter
-FigureCounter=FigureCounter+1
-
-```
-
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) and estimated biomass (kg/ha) by ecotype in the range of the Chisana caribou herd. Biomass is estimated as the mean lichen thickness (cm) multiplied by 1135.6 (Moen et al. (2007). Upper and lower biomass estimates are calculated by adding or subtracting one standard deviation from the mean lichen thickness and multiplying by 1135.6, respectively. Note that only one plot was sampled in the Forest ecotype.",sep="")}
-
-# Increment the table counter
-TableCounter = TableCounter + 1
-
-# Output the lichen thickness and biomass stats
-Sql = "SELECT Ecotype
-,[Estimated lichen biomass (kg/ha)]
-,[Biomass lower estimate] As [Biomass lower estimate (kg/ha)]
-,[Biomass upper estimate]  As [Biomass upper estimate (kg/ha)]
-,n,[Number of plots]
-FROM Biomass ORDER BY [Mean lichen thickness (cm)] DESC"
-Sql = "SELECT 'Reconfigure this'"
-knitr::kable(sqldf(Sql), digits = 2)
-
-```
-
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by ecotype.",sep="")}
-
-ggplot(Biomass) +
-  geom_col(aes(x=Ecotype,y=`Estimated lichen biomass (kg/ha)`),fill='lightgray',color='darkgray') +
-  geom_errorbar(aes(x=Ecotype,ymin=`Biomass lower estimate`,ymax=`Biomass upper estimate`)) +
-  geom_text(aes(x=Ecotype,y=`Estimated lichen biomass (kg/ha)`,label= round(`Estimated lichen biomass (kg/ha)`,digits=2))) +
-  theme_minimal() +
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
-
-```
-
 ## Litter
+
+Each plot had 3 litter type and depth observations. This section assembles a list of all litter types encountered from the N,SE, and SW transects and counts how many observations there were for each to get at a percent of total litter observations per litter type.
 
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Litter dominance (count of transects by litter type divided by total number of transects.",sep="")}
 
-# Increment the table counter
-TableCounter = TableCounter + 1
-
-# Get a list of distinct LitterTypes to use in queries that follow
-LitterTypes = sqldf("SELECT DISTINCT NTransectLitterType As LitterType FROM Plots 
+# Get a list of unique LitterTypes among the N,SE and SW transects so that we can count up how many observations there were for each litter type
+UniqueLitterTypes = sqldf("SELECT DISTINCT NTransectLitterType As LitterType FROM Plots 
 UNION 
 SELECT DISTINCT SETransectLitterType FROM Plots
 UNION 
@@ -770,20 +738,23 @@ Sql = "SELECT IFNULL(LitterType,'None') As  [Litter type]
 	/ (SELECT Count(*)* 3 FROM Plots WHERE EstablishDate IS NOT NULL) * 100
 	As [% of transects]
 
-FROM LitterTypes d
+FROM UniqueLitterTypes d
+WHERE LitterType <> ''
 ORDER BY [% of transects] DESC,LitterType
 "
 
-# Get the litter type data into a data frame
+# Get the litter type counts dataset into a data frame
 LitterType = sqldf(Sql)
 
 # Print out the summary table
-knitr::kable(sqldf("SELECT [Litter type],SumOfTransects as [Number of transects],[% of transects] FROM LitterType ORDER BY [% of transects] DESC"),digits=1)
+knitr::kable(sqldf("SELECT [Litter type],SumOfTransects as [Observations],[% of transects] FROM LitterType ORDER BY [% of transects] DESC"),digits=2)
 
 # Get the total number of transects sampled into a parameter to us in the text
 TotalTransects = LitterType[1,"TotalNumberOfTransects"]
 
 ```
+
+`r TotalTransects` total transects.
 
 ## Caribou Ecotype Preference
 
@@ -915,7 +886,7 @@ ggplot(sqldf("SELECT Ecotype,Avg(Elev_m) as [Mean elevation (m)],Min(Elev_m) as 
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Sampling plots elevation profile by plot.",sep="")}
 
 ggplot(Plots) +
-  geom_point(aes(x=reorder(Plot,Elev_m),y=Elev_m,shape=Ecotype)) +
+  geom_point(aes(x=reorder(Plot,Elev_m),y=Elev_m,shape=Ecotype,color=Ecotype)) +
   ggtitle(paste("Sampling plots elevation profile ",sep="")) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
@@ -1182,16 +1153,6 @@ for(i in 1:nrow(Samples)) {
   Sample = Samples$Sample[i]
   GetPelletCompositionSummary(Sample)
 }
-
-```
-
-# Appendix ?: Litter Type Summary
-
-```{r, echo=FALSE, results='asis',tab.cap=paste("Table ",TableCounter,"Litter composition by transect.",sep="")}
-# Increment the table counter
-TableCounter = TableCounter + 1
-
-knitr::kable(LitterType,digits=1)
 
 ```
 
