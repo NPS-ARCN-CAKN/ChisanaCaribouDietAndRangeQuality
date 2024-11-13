@@ -20,6 +20,8 @@ library(sqldf)
 library(tidyverse)
 library(odbc)
 library(leaflet)
+library(ggspatial)
+library(sf)
 
 # Paths to CAKN drive data and Data Store Project Reference
 # J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment
@@ -34,9 +36,6 @@ FigureCounter = 1
 
 ```
 
-
-
-
 ```{r, echo=FALSE}
 # This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
 
@@ -46,7 +45,7 @@ connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nun
 # Function to Write a data frame to a file in the deliverables directory. This will be used as data is pulled from the database and written to files for archival in Data Store
 WriteDataFrameToFile = function(DataFrame,Filename){
   ExportFile = paste(DeliverablesDirectory,Filename,sep="")
-  write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
+  #write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
 }
 
 # Write the vegetation dataset to file
@@ -272,7 +271,6 @@ Authors, etc.
 
 [to be written]
 
-
 # Introduction
 
 The Chisana Caribou Herd (CCH) is a small herd of woodland caribou located in northeastern Wrangell St. Elias (WRST) National Park and Preserve in Alaska and the Tetlin National Wildlife Refuge in the Yukon. During the early 1990s, many caribou herds in interior Alaska experienced population declines of varying severity (Valkenburg et al., 1996). From 1989 to 2001, the CCH population dropped from an estimated 1800 to 400 individuals (R. Farnell, unpublished data). The CCH became listed as a “Specially Protected” population in 2002 under the Yukon’s Federal Species at Risk Act. After the implementation of a captive rearing program and the development of an international, multiagency management plan, the CCH population is now stable and open to subsistence hunting. However, the current population is significantly below pre-decline levels. Several factors most likely contributed to the CCH population decline including predation, low recruitment, and poor habitat.
@@ -391,6 +389,8 @@ knitr::kable(sqldf("SELECT Ecotype,Count(Ecotype) as n
 FROM Plots
 Group By Ecotype
 ORDER BY n DESC"))
+
+
 
 ```
 
@@ -515,26 +515,34 @@ FROM CoverData
 WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
 And PctCover_TopCanopy > 1
 AND PctCover_TopCanopy > 0
-ORDER BY PctCover_TopCanopy DESC"))
+ORDER BY PctCover_TopCanopy DESC"),digits=0)
 ```
 
-### Mid-story Cover
+<!-- ### Mid-story Cover -->
 
--   Mid-story percent cover values are very low because of diminishing likelihood of a hit in Lower2 and exponentially diminishing likelihood of a hit on Lower3. We can't just sum Lower1-3 and divide by the number of hit opportunities. LM ignored Lower1-3, probably for this reason? Or should we just use Lower1?
+<!-- -   Mid-story percent cover values are very low because of diminishing likelihood of a hit in Lower2 and exponentially diminishing likelihood of a hit on Lower3. We can't just sum Lower1-3 and divide by the number of hit opportunities. LM ignored Lower1-3, probably for this reason? Or should we just use Lower1? -->
 
-\*Unweighted by ecotype area.
+<!-- \*Unweighted by ecotype area. -->
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent mid-story cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")}
-# Increment the table counter
-TableCounter = TableCounter + 1
+<!-- ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent mid-story cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")} -->
 
-# Print the mid-story (Lower1-3 strata) cover.
-knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_LowerInterceptsCombined as [% cover] 
-FROM CoverData 
-WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
-AND PctCover_LowerInterceptsCombined > 0.1
-ORDER BY PctCover_LowerInterceptsCombined DESC"))
-```
+<!-- # Increment the table counter -->
+
+<!-- TableCounter = TableCounter + 1 -->
+
+<!-- # Print the mid-story (Lower1-3 strata) cover. -->
+
+<!-- knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_LowerInterceptsCombined as [% cover]  -->
+
+<!-- FROM CoverData  -->
+
+<!-- WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic') -->
+
+<!-- AND PctCover_LowerInterceptsCombined > 0.1 -->
+
+<!-- ORDER BY PctCover_LowerInterceptsCombined DESC")) -->
+
+<!-- ``` -->
 
 ### Basal Cover
 
@@ -551,17 +559,15 @@ WHERE
 -- GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
 GrowthHabitSub NOT IN ('Abiotic')
 AND PctCover_SoilSurface > 0.1
-ORDER BY PctCover_SoilSurface DESC"))
+ORDER BY PctCover_SoilSurface DESC"),digits=0)
 
 ```
 
 ## Lichen Layer Thickness and Biomass
 
-NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species as B=1135.6T where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha).
-,1135.6 * AVG(IFNULL(v.LichenHeight,0)) as [Estimated lichen biomass (kg/ha)" without really knowing much about that methodology.
+NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species as B=1135.6T where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha). ,1135.6 \* AVG(IFNULL(v.LichenHeight,0)) as [Estimated lichen biomass (kg/ha)" without really knowing much about that methodology.
 
 Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any species of lichens in their lichen height measument at each point intercept ("We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present").
-
 
 ```{r, echo=FALSE}
 
@@ -589,6 +595,7 @@ Sql="SELECT Ecotype
 
 , COUNT(*) AS n
 , COUNT(DISTINCT Plot) as [Number of plots]
+, COUNT(Line) as [Number of transects]
 ,EcotypeID
 FROM Dataset_VegData v 
 GROUP BY Ecotype,EcotypeID
@@ -598,30 +605,105 @@ Biomass = sqldf(Sql)
 
 ```
 
+```{r}
+# Start by calculating mean lichen heights by plot
+MeanLichenHeightByPlot = Dataset_VegData %>% select(Ecotype,Plot,Line,PointLoc,LichenHeight) %>% 
+  filter(is.na(LichenHeight) == FALSE) %>% 
+  group_by(Plot) %>% 
+  summarize(
+    Plots=n_distinct(Plot)
+    ,Transects=n_distinct(Line)
+    ,NonNullLichenHeights=n()
+    ,`Mean lichen thickness (cm)`=mean(LichenHeight)
+    ,MeanHt=mean(LichenHeight) # This column duplicates the one above but dplyr wouldn't calculate an SD on a column named `Mean lichen thickness (cm)` so I calculated it below on MeanHt instead
+    ,SD=sd(LichenHeight)
+  ) %>%
+  arrange(Plot)
+
+# Calculate estimated biomass and add it to the MeanLichenHeightByPlot table
+MeanLichenHeightByPlot$`Estimated lichen biomass (kg/ha)` = MeanLichenHeightByPlot$MeanHt * 1135.6 # Moen et al. (2007)
+
+# Join the results to the Plots table in order by add the Ecotype back in so we can calculate statistics by ecotype
+MeanLichenHeightByPlot = inner_join(MeanLichenHeightByPlot,Plots,by='Plot') %>% select(Ecotype,Plot,Plots,Transects,NonNullLichenHeights,`Mean lichen thickness (cm)`,SD,MeanHt)
+
+# Next calculate mean lichen height by ecotype (mean of mean lichen height by plot)
+MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>% 
+  #filter(Ecotype == 'Alpine Dwarf Shrub/Barrens') %>%
+  summarise(
+    Plots=sum(Plots)
+    ,Transects=sum(Transects)
+    ,`Mean lichen thickness (cm)`= mean(`Mean lichen thickness (cm)`)
+    ,SD=sd(MeanHt,na.rm=TRUE) # Note: SD is calculated on MeanHt instead of `Mean lichen thickness (cm)` because dplyr wouldn't give me an SD on that column name so I had to create a duplicate column
+    ,`Estimated biomass (kg/ha)`=mean(`Estimated lichen biomass (kg/ha)`)
+    ,n=sum(NonNullLichenHeights)
+  )
+
+```
+
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
-# Output the lichen thickness and biomass stats
-knitr::kable(sqldf("SELECT Ecotype,[Mean lichen thickness (cm)],Min,Max,SD,n,[Number of plots] FROM Biomass ORDER BY [Mean lichen thickness (cm)] DESC"), digits = 2)
+# Output the lichen thickness by ecotype
+knitr::kable(MeanLichenHeightByEcotype, digits = 2)
+
+# Output the lichen thickness by plot
+#knitr::kable(MeanLichenHeightByPlot, digits = 2)
 
 ```
 
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by ecotype. Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
-ggplot(Biomass) +
+ggplot(MeanLichenHeightByEcotype) +
+  # Mean lichen height column chart
   geom_col(aes(x=Ecotype,y=`Mean lichen thickness (cm)`),fill='lightgray',color='darkgray') +
-  geom_errorbar(aes(x=Ecotype,ymin=ifelse(`Mean lichen thickness (cm)` - SD < 0,0,`Mean lichen thickness (cm)` - SD),ymax=`Mean lichen thickness (cm)` + SD)) +
+  
+  # Error bars as standard deviation
+  geom_errorbar(aes(x=Ecotype,ymin=`Mean lichen thickness (cm)` - SD,ymax=`Mean lichen thickness (cm)` + SD),width=0.2) +
   geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)`,label=round(`Mean lichen thickness (cm)`,digits=2)) ) +
-  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)` + .5,label=EcotypeID ) ) +
-  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)` + .8,label=paste("(",`Number of plots`,")",sep="") ) ) +
   theme_minimal() +
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) 
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("Mean lichen thickness by ecotype")
+
+#Increment the figure counter
+FigureCounter=FigureCounter+1
 
 ```
 
-# KABLE IN THE BIOMASS DATA TABLE HERE AND FINISH THE PLOT
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by plot Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
+ggplot(MeanLichenHeightByPlot) +
+  # Mean lichen height column chart
+  geom_col(aes(x=Plot,y=`Mean lichen thickness (cm)`,fill=Ecotype)) +
+  
+  # Error bars as standard deviation
+  geom_errorbar(aes(x=Plot,ymin=ifelse(`Mean lichen thickness (cm)` - SD < 0,0,`Mean lichen thickness (cm)` - SD),ymax=`Mean lichen thickness (cm)` + SD),width=0.5,color='gray') +
+  geom_text(aes(x=Plot,y=`Mean lichen thickness (cm)`,label=round(`Mean lichen thickness (cm)`,digits=2)) ) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5))  +
+  ggtitle("Mean lichen thickness by plot")
+
+#Increment the figure counter
+FigureCounter=FigureCounter+1
+```
+
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen biomass (kg/ha) by ecotype (Moen et al., 2007) Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+
+ggplot(MeanLichenHeightByEcotype) +
+  # Mean lichen height column chart
+  geom_col(aes(x=Ecotype,y=`Estimated biomass (kg/ha)`),fill='lightgray',color='darkgray') +
+  
+  # Error bars as standard deviation
+  #geom_errorbar(aes(x=Ecotype,ymin=`Estimated biomass (kg/ha)` - SD,ymax=`Estimated biomass (kg/ha)` + SD),width=0.2) +
+  geom_text(aes(x=Ecotype,y=`Estimated biomass (kg/ha)`,label=round(`Estimated biomass (kg/ha)`,digits=2)) ) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ggtitle("Estimated lichen biomass (kg/ha) by ecotype")
+
+#Increment the figure counter
+FigureCounter=FigureCounter+1
+
+```
 
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) and estimated biomass (kg/ha) by ecotype in the range of the Chisana caribou herd. Biomass is estimated as the mean lichen thickness (cm) multiplied by 1135.6 (Moen et al. (2007). Upper and lower biomass estimates are calculated by adding or subtracting one standard deviation from the mean lichen thickness and multiplying by 1135.6, respectively. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
@@ -629,16 +711,16 @@ ggplot(Biomass) +
 TableCounter = TableCounter + 1
 
 # Output the lichen thickness and biomass stats
-knitr::kable(sqldf("SELECT Ecotype
+Sql = "SELECT Ecotype
 ,[Estimated lichen biomass (kg/ha)]
 ,[Biomass lower estimate] As [Biomass lower estimate (kg/ha)]
 ,[Biomass upper estimate]  As [Biomass upper estimate (kg/ha)]
 ,n,[Number of plots]
-FROM Biomass ORDER BY [Mean lichen thickness (cm)] DESC"), digits = 2)
+FROM Biomass ORDER BY [Mean lichen thickness (cm)] DESC"
+Sql = "SELECT 'Reconfigure this'"
+knitr::kable(sqldf(Sql), digits = 2)
 
 ```
-
-
 
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by ecotype.",sep="")}
 
@@ -793,15 +875,16 @@ FROM PelletData
 GROUP BY Plant 
 --HAVING Avg(PctComposition) > 1
 ORDER BY Avg(PctComposition) DESC"
-sqldf(Sql)
+knitr::kable(sqldf(Sql))
 ```
 
-# Conclusion
+# Discussion
+
+To be written
 
 # Appendix A: Sampling Plots
 
 ## List Of Plots
-
 
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Sampling plots.",sep="")}
 # Increment the table counter
@@ -828,6 +911,7 @@ ggplot(sqldf("SELECT Ecotype,Avg(Elev_m) as [Mean elevation (m)],Min(Elev_m) as 
   xlab("Ecotype")
 
 ```
+
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Sampling plots elevation profile by plot.",sep="")}
 
 ggplot(Plots) +
