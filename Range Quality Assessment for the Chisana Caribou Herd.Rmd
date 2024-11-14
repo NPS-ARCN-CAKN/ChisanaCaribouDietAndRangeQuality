@@ -32,7 +32,8 @@ DeliverablesDirectory = "J:/Monitoring/Caribou/WRST/Projects/Chisana Caribou Hab
 
 # Initiate table and figure counters
 TableCounter = 2
-FigureCounter = 1
+# Set the figure counter (Figs 1-4 appear in the introductory material. First R generated figure is 5, so start at 5)
+FigureCounter = 5
 
 ```
 
@@ -273,6 +274,8 @@ Authors, etc.
 
 # Introduction
 
+[copied from LM's preliminary report]
+
 The Chisana Caribou Herd (CCH) is a small herd of woodland caribou located in northeastern Wrangell St. Elias (WRST) National Park and Preserve in Alaska and the Tetlin National Wildlife Refuge in the Yukon. During the early 1990s, many caribou herds in interior Alaska experienced population declines of varying severity (Valkenburg et al., 1996). From 1989 to 2001, the CCH population dropped from an estimated 1800 to 400 individuals (R. Farnell, unpublished data). The CCH became listed as a “Specially Protected” population in 2002 under the Yukon’s Federal Species at Risk Act. After the implementation of a captive rearing program and the development of an international, multiagency management plan, the CCH population is now stable and open to subsistence hunting. However, the current population is significantly below pre-decline levels. Several factors most likely contributed to the CCH population decline including predation, low recruitment, and poor habitat.
 
 Lichens may be the greatest feature limiting CCH habitat quality. Lichens comprise up to 60-86% of the winter diets of Yukon woodland caribou herds, while moss makes up only 1-8%, as estimated from the microhistological analysis of fecal pellets (Farnell and Gardner, 2002). Relative to other Alaskan and Yukon caribou, the CCH appear to have a winter diet that is unusually and low in lichen (31%) and high in moss (51%). Overflight landcover assessments and collections from a limited number of plots suggest that lichen cover with the range is sparse and dominated by nutrient-poor Stereocaulon species (Clarke and Waterreus, 2012), an indicator of poor winter habitat for reindeer (Swanson and Barker, 1992). More data on lichen and moss cover with the CCH range are needed to corroborate these results. In addition to cover, lichen biomass is an important measurement of caribou forage quality. If overgrazing occurs, lichen biomass may not be correlated with lichen cover, and caribou have shown preference for regions with low lichen cover, but high lichen biomass (Collins et al., 2010). Lichen biomass is commonly estimated from mean lichen mat thickness (Lieb, 1994; Arseneault et al., 1997; Moen et al. 2007; Collins et al., 2010). Therefore, measuring lichen thickness and cover in the CCH range may capture key details for assessing winter habitat.
@@ -285,42 +288,7 @@ Summer forage is also an important component of caribou habitat. Low recruitment
 
 We focus on the core range of the CCH within WRST National Park and Preserve boundaries. This area forms the basin between the Wrangell, St. Elias, and Nutzotin Mountains, containing the Chisana and White Rivers and the historic town of Chisana. Study area limits were defined to include the bulk of CCH radio collar signals recorded between 1988 and 2015 (Fig. 1; J. Putera, unpublished data, 2015). The resulting area is 2795 km^2^ (1079 miles^2^ ) and contains moderate to high elevations, from 1000 - 2500 m (3281–8202 ft).
 
-## Vegetation Cover
-
 We chose to proportionally allocate sampling sites to six major ecotypes within the study area (Table 1). Major ecotypes were developed by consolidating the detailed ecotypes mapped in WRST by Jorgenson et al. (2008) using satellite imagery. We grouped Jorgenson et al. ecotypes into groups based on the similarity of their definitions and geographic size (Table 1; Fig. 2). We included all ecotypes except for glaciated barrens. In our study region, the three most common ecotypes by percent cover are Alpine Dwarf Shrub/Barrens (28.1%), Subalpine Wood/Shrub (28.1%), and Alpine Sedge-Dwarf Shrub (24.3%). Riverine, Alpine Meadow, and Forest ecotypes make up the remaining 19.4% of the region.
-
-![](images/clipboard-3865551050.png)
-
-Figure 1. Defining the core range of the Chisana caribou herd in northeastern WRST Park and Preserve. Points are radio collar signals recorded from 1988 to 2015 during summer or winter seasons. The core range (yellow border) was selected to include the majority of radio signals within WRST (green border).
-
-![](images/clipboard-954225469.png)
-
-Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST Park and Preserve (Table 1). Map based on ecotype landcover developed by Jorgenson et al. (2008).
-
-We generated 56 random points for site locations within the Chisana caribou herd range. We included a 3000 m buffer between sites to ensure an even geographic distribution throughout the study area (geographic locations of sites are listed in Appendix A). Points that fell within rivers were moved to the nearest accessible riverine ecotype and points on excessively steep terrain were eliminated. We re-assigned ecotypes after field data collection using the formal WSRT ecotype classification key (summarized in Table 1; Jorgenson et al., 2008). We visited 23 sites in July, 2015 and 10 sites in July, 2016. Sites were accessed by helicopter or foot using a Trimble or Garmin GPS for navigation (Fig. 3). Permanent plots were established at all sites except those falling with a proposed Archeological District around Wiki Peak. Permanent plots were marked with a 60 cm-long rebar located at plot centers. At each site, we described physical landscape characteristics such as slope position, drainage, and geomorphic disturbance. We recorded vegetation along three 20 m-long transects oriented at 0, 120, and 240° from the plot center. Each transect was photographed and measured for slope. Transects were systematically sampled at 50 cm intervals using the line-point intercept method. At each point, we recorded all intercepted overstory and understory taxa, soil surface cover, and lichen height. Lichen height was measured using a 3 mm-wide metal skewer inserted into the base of the lichen mat (Arseneault et al., 1997; Moen et al. 2007; Collins et al., 2010). We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present. Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss (See Appendix B for detailed field measurement protocol).
-
-We identified taxa to the species or genus-level. We considered forage lichen as the genera Cladina, Cladonia (excluding species with cup-shaped podetia), Cetraria (excluding C. richardsonii), and Stereocaulon, following Collins et al. (2011). We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area.
-
-```{r, include=TRUE}
-
-# NOTES: It appears that Merkhofer took Jorgenson et al. 2008's landcover classification and merged various subecotypes together into larger ecotypes. The Major ecotype column in Table 1, below, is Merkhofer's ecotype derived from the 'Included detailed ecotypes' which come from Jorgenson.
-
-# Merkhofer documented her GIS work well in \\inpyugamsstor00\Primary Datapool\I&M\CAKN\CAKN2\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\Chisana Vegetation Sampling\)
-
-# Merkhofer's steps as I can reproduce them:
-
-# 1. She loaded Jorgenson's landcover into a geodatabase: J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\GIS\ChisanaCaribouHabitat.gdb as WRSTEcotypes2008Chisana
-
-# 2. She combined various cover classes into larger major ecotypes and added a SamplingGroup column (example SWB corresponding to Subalpine Wood/Shrub)
-
-# 3. These merged major ecotypes became a feature class Ecotypes_in_one_shapefile. This layer is what is shown in Figure 2 of the Merkhofer, 2015 report
-
-# 4. She then chose potential veg plot locations in the major ecotypes for locating sampling plots (Chisana_Veg_Sampling_Points in the geodatabase, APPENDIX A. RANDOM SITE LOCATIONS AND STUDY STATUS in her report)
-
-
-```
-
-## Ecotypes
 
 Table 1. Ecotypes of Chisana caribou herd range, ranked by percent cover.
 
@@ -364,23 +332,67 @@ Table 1. Ecotypes of Chisana caribou herd range, ranked by percent cover.
 
 : caption
 
-## Lichen Mat Thickness and Biomass
+We generated 56 random points for site locations within the Chisana caribou herd range (Appendix A). We included a 3000 m buffer between sites to ensure an even geographic distribution throughout the study area. Points that fell within rivers were moved to the nearest accessible riverine ecotype and points on excessively steep terrain were eliminated. We re-assigned ecotypes after field data collection using the formal WSRT ecotype classification key (summarized in Table 1; Jorgenson et al., 2008). We visited 23 sites in July, 2015 and 10 sites in July, 2016. Sites were accessed by helicopter or foot using a Trimble or Garmin GPS for navigation (Fig. 3). Permanent plots were established at all sites except those falling with a proposed Archeological District around Wiki Peak. Permanent plots were marked with a 60 cm-long rebar located at plot centers. At each site, we described physical landscape characteristics such as slope position, drainage, and geomorphic disturbance.
 
-We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species:
+![](images/clipboard-3865551050.png)
 
-$B=1135.6T$,
+Figure 1. Defining the core range of the Chisana caribou herd in northeastern WRST Park and Preserve. Points are radio collar signals recorded from 1988 to 2015 during summer or winter seasons. The core range (yellow border) was selected to include the majority of radio signals within WRST (green border).
 
-where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha). Statistical analyses- R Studio software (RStudio Team, 2015) was used for all analyses. Following the methods recommended by Elzinga et al. (1998), we sequentially sampled percent cover values to test for a stable estimate of the overall population mean and standard deviation. We additionally used two-tailed significance tests to determine the necessary sample size for estimating percent cover for a single population and for detecting differences in percent cover between two time periods.
+![](images/clipboard-954225469.png)
 
-## Fecal Pellet Analysis
+Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST Park and Preserve (Table 1). Map based on ecotype landcover developed by Jorgenson et al. (2008).
 
-We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab
+![](images/clipboard-2456647939.png)
 
-## Litter
+**RE-DO THIS MAP WITH 2016 SITES**
 
-Added up the number of transects by litter type and divided by the total number of transects.
+Figure 3. Vegetation sampling sites in the Chisana caribou herd range. Sites visited in 2015 (green) and proposed for future study years (red) are labeled with site IDs. See Appendix A for the geographic locations of all sites.
 
-## Number of plots by ecotype
+![](images/clipboard-3907250847.png)
+
+Fig 4. Plot design schematic showing locations of transects.
+
+## Ecotypes
+
+Table 1. Ecotypes of Chisana caribou herd range, ranked by percent cover.
+
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+|       | **Major ecotype**          | **Included detailed ecotypes\*** | **Distinguishing features**                                                                                                                  | **Landcover** |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 1     | Alpine Dwarf-Shrub/Barrens | Alpine Dryas Dwarf Shrub         | *Dryas* spp. and other evergreen dwarf shrubs dominant, trees or tall shrubs absent, and rare graminoids; occurs at high elevations          | 28.1%         |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Alpine Barrens                   |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Alpine Ericaeous Dwarf Shrub     |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 2     | Subalpine Wood/Shrub       | Subalpine Willow-Birch Shrub     | Characterized by tall (\> 0.2 m) deciduous shrubs; few sedges and grasses; tree cover \< 20%                                                 | 28.1%         |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Subalpine Spruce Woodland        |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 3     | Alpine Sedge-Dwarf Shrub   | Alpine Sedge-Dwarf Willow Meadow | Deciduous shrubs dominant, but with lower frequencies than in ecotype 2; sedges co-dominant; trees absent; relatively high species diversity | 24.3%         |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 4     | Riverine                   | Riverine Circumalkaline Barrens  | On or near braided streams; deciduous or evergreen dwarf shrubs are dominant and trees uncommon                                              | 7.5%          |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Sandy Willow Shrub      |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Dryas Dwarf Shrub       |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Tall Alder Shrub        |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Low Silverberry Shrub   |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 5     | Alpine Meadow              | Alpine Tussock Meadow            | Tussocks \> 25% and sedge cover approaching 60%; dwarf shrubs can be co-dominant; no trees; wet soil                                         | 7.3%          |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Alpine Sedge Meadow              |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
+| 6     | Forest                     | Subalpine Poplar Forest          | Common on or near overbank deposits; characterized by \> 20% tree cover and thick mossy floor                                                | 4.6%          |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine White Spruce Forest     |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Gravelly Poplar Forest  |                                                                                                                                              |               |
+|       |                            |                                  |                                                                                                                                              |               |
+|       |                            | Riverine Spruce-Poplar Forest    |                                                                                                                                              |               |
++-------+----------------------------+----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------+---------------+
 
 Why only one plot in Forest? Merkhofer: "We found that Forest ecotypes made for difficult helicopter landing access and subsequently sampled only one site from this ecotype. Future sampling should be targeted to these under-sampled ecotypes."
 
@@ -394,13 +406,55 @@ FROM Plots
 Group By Ecotype
 ORDER BY n DESC"))
 
+```
+
+## Vegetation Cover
+
+We recorded vegetation along three 20 m-long transects oriented at 0, 120, and 240° from the plot center (Figure 4). Each transect was photographed and measured for slope. Transects were systematically sampled at 50 cm intervals using the line-point intercept method for 40 observations per transect. At each point, we recorded all intercepted overstory and understory taxa, soil surface cover, and lichen height. We identified taxa to the species or genus-level. We considered forage lichen as the genera Cladina, Cladonia (excluding species with cup-shaped podetia), Cetraria (excluding C. richardsonii), and Stereocaulon, following Collins et al. (2011). We estimated the percent cover of major life forms across the entire study area as the average of ecotype means weighted by ecotype area. Percent cover was calculated for each plot as total number of plant intercepts by species divided by 120 (3 transects X 40 sampling points).
+
+**[I didn't do the below because I need help with it]**
+
+**Following the methods recommended by Elzinga et al. (1998), we sequentially sampled percent cover values to test for a stable estimate of the overall population mean and standard deviation. We additionally used two-tailed significance tests to determine the necessary sample size for estimating percent cover for a single population and for detecting differences in percent cover between two time periods.**
+
+## Lichen Thickness and Estimated Biomass
+
+Lichen height was measured using a 3 mm-wide metal skewer inserted into the base of the lichen mat (Arseneault et al., 1997; Moen et al. 2007; Collins et al., 2010) at each of the 40 vegetation intercept points per transect. We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present. We estimated lichen biomass (kg/ha) for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species:
+
+$B=1135.6T$,
+
+where T is mean lichen mat thickness (cm).
+
+## Litter Depth and Composition
+
+Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss.
+
+```{r, include=FALSE}
+
+
+# NOTES: It appears that Merkhofer took Jorgenson et al. 2008's landcover classification and merged various subecotypes together into larger ecotypes. The Major ecotype column in Table 1, below, is Merkhofer's ecotype derived from the 'Included detailed ecotypes' which come from Jorgenson.
+
+# Merkhofer documented her GIS work well in \\inpyugamsstor00\Primary Datapool\I&M\CAKN\CAKN2\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\Chisana Vegetation Sampling\)
+
+# Merkhofer's steps as I can reproduce them:
+
+# 1. She loaded Jorgenson's landcover into a geodatabase: J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\GIS\ChisanaCaribouHabitat.gdb as WRSTEcotypes2008Chisana
+
+# 2. She combined various cover classes into larger major ecotypes and added a SamplingGroup column (example SWB corresponding to Subalpine Wood/Shrub)
+
+# 3. These merged major ecotypes became a feature class Ecotypes_in_one_shapefile. This layer is what is shown in Figure 2 of the Merkhofer, 2015 report
+
+# 4. She then chose potential veg plot locations in the major ecotypes for locating sampling plots (Chisana_Veg_Sampling_Points in the geodatabase, APPENDIX A. RANDOM SITE LOCATIONS AND STUDY STATUS in her report)
 
 
 ```
 
-## Map
+## Fecal Pellet Analysis
 
-A map of the plots is shown below:
+We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab
+
+## Statistical Software
+
+R (R Core Team, 2024) and R Studio software (Posit team, 2024) was used for all analyses.
 
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
 # Increment the figure counter
@@ -665,7 +719,7 @@ ggplot(MeanLichenHeightByEcotype) +
     ,size=3,vjust=2.2) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-  ggtitle("Mean lichen thickness by ecotype")
+  ggtitle("Mean lichen thickness and estimated biomass by ecotype")
 
 #Increment the figure counter
 FigureCounter=FigureCounter+1
@@ -675,12 +729,25 @@ FigureCounter=FigureCounter+1
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
 
 # Output the lichen thickness by ecotype
-knitr::kable(MeanLichenHeightByEcotype, digits = 2)
+knitr::kable(MeanLichenHeightByEcotype %>% rename(SD=`SD (thickness)`) %>% select(Ecotype,Plots,Transects,`Mean lichen thickness (cm)`,SD,n), digits = 2)
 
 # Increment the table counter
 TableCounter = TableCounter + 1
 
 ```
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean estimated lichen biomass (kg/Ha) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
+
+# Output the lichen estimated biomass by ecotype
+knitr::kable(MeanLichenHeightByEcotype %>% rename(SD=`SD (biomass)`) %>% select(Ecotype,Plots,Transects,`Estimated biomass (kg/ha)`,SD,n), digits = 2)
+
+
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+```
+
+
 
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by plot Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
@@ -702,7 +769,7 @@ ggplot(MeanLichenHeightByPlot) +
 FigureCounter=FigureCounter+1
 ```
 
-## Litter
+## Litter Depth and Composition
 
 Each plot had 3 litter type and depth observations. This section assembles a list of all litter types encountered from the N,SE, and SW transects and counts how many observations there were for each to get at a percent of total litter observations per litter type.
 
@@ -798,13 +865,13 @@ TableCounter = TableCounter + 1
 Sql = "SELECT Ecotype
 ,Count(*) as [GPS Fixes] 
 ,(SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') as TotalFixes
-,Cast(Count(*) As Float) / (SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') * 100 as [Percent of fixes]
+,Cast(Count(*) As Float) / (SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') * 100 as [Percent of GPS fixes]
 FROM EcoPref
 WHERE Ecotype IS NOT NULL and NOT Ecotype = ''
 GROUP BY Ecotype 
 ORDER By Count(*) DESC"
 PercentOfFixesByEcotype = sqldf(Sql)
-knitr::kable(sqldf("SELECT Ecotype,ConCat(Cast([Percent of fixes] as Int),'%') as [Percent of GPS fixes]  FROM PercentOfFixesByEcotype ORDER BY [Percent of fixes] DESC"),digits=2)
+knitr::kable(PercentOfFixesByEcotype %>% select(Ecotype,`GPS Fixes`,`Percent of GPS fixes`),digits=0)
 
 # Get the total number of GPS fixes into a parameter that can be used in the text
 TotalGPSFixes = PercentOfFixesByEcotype[1,'TotalFixes']
@@ -824,7 +891,7 @@ GROUP BY Month,Ecotype
 ORDER By Month, Count(*) DESC"
 EcoPrefByMonth = sqldf(Sql)
 
-
+# Break out the GPS fixes by month to see how the caribou spend their time seasonally
 ggplot(EcoPrefByMonth) +
   geom_col(aes(x=Month,y=`GPS Fixes`,fill=Ecotype),position="fill") +
   ggtitle("Chisana caribou ecotype preference by month") +
@@ -837,17 +904,46 @@ ggplot(EcoPrefByMonth) +
 
 ## Fecal Pellet Analysis
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition for plant categories greater than one percent.",sep="")}
+Pellet composition by plant.
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by taxa having percent composition greater than one percent.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
 Sql = "SELECT Plant,Avg(PctComposition) as Mean,Count(*) as n 
 FROM PelletData 
 GROUP BY Plant 
---HAVING Avg(PctComposition) > 1
+HAVING Avg(PctComposition) > 1
 ORDER BY Avg(PctComposition) DESC"
-knitr::kable(sqldf(Sql))
+
+PelletCompositionSummary = sqldf(Sql)
+knitr::kable(PelletCompositionSummary,digits=1)
+
+TotalPelletDataObservations = nrow(PelletCompositionSummary)
+
 ```
+
+Total records = `r TotalPelletDataObservations`.
+
+Pellet percent composition by plant form.
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+Sql = "SELECT Form,Avg(PctComposition) as [Mean % composition],Count(*) as n 
+FROM PelletData 
+GROUP BY Form 
+ORDER BY Avg(PctComposition) DESC"
+
+PelletCompositionSummary = sqldf(Sql)
+knitr::kable(PelletCompositionSummary,digits=1)
+
+TotalPelletDataObservations = nrow(PelletCompositionSummary)
+
+```
+
+Total records = `r TotalPelletDataObservations`.
 
 # Discussion
 
@@ -1040,35 +1136,35 @@ GetEcotypeSection = function(Ecotype){
   
   
   # Dump out the midstory cover. NOTE: The table below only considers Lower1 intercepts - ignores Lower2 and 3.
-  cat("## Mid-Story Cover  \n\n")
-  cat("  \n\n")
-  Sql = paste("SELECT ScientificName,Lower1Intercepts as Hits,TotalHitsPossible as Opportunities,CAST(PctCover_Lower1 As Float) As [% cover]
-    FROM CoverDataByEcotype 
-    WHERE Ecotype='",Ecotype,"' And [% cover] > 1 
-    ORDER BY [% cover] DESC",sep="")
-  Cover = sqldf(Sql)
-  
-    # Plot the soil surface cover
-  cat("  \n\n")
-  print(
-    ggplot(Cover) +
-      geom_col(aes(x=reorder(ScientificName,-`% cover`),y=`% cover`)) +
-      ggtitle(paste("Mid-story cover: ",Ecotype,sep="")) +
-      theme_minimal() +
-      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-      xlab("Taxa") +
-      ylab("% cover")
-  )
-    cat(" Figure ",FigureCounter,". Mid-story percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
-    cat("  \n\n")
-    FigureCounter = FigureCounter + 1
-  
-  # Mid-story cover summary table
-  Cover[nrow(Cover) + 1,] = c("TOTAL",sum(Cover$Hits),'',sum(Cover$`% cover`))
-  cat("Table ",TableCounter,". Midstory cover in the ",Ecotype," ecotype.  \n\n")
-  print(knitr::kable(Cover,digits=1))
-  cat("  \n\n")
-  TableCounter = TableCounter + 1
+  # cat("## Mid-Story Cover  \n\n")
+  # cat("  \n\n")
+  # Sql = paste("SELECT ScientificName,Lower1Intercepts as Hits,TotalHitsPossible as Opportunities,CAST(PctCover_Lower1 As Float) As [% cover]
+  #   FROM CoverDataByEcotype 
+  #   WHERE Ecotype='",Ecotype,"' And [% cover] > 1 
+  #   ORDER BY [% cover] DESC",sep="")
+  # Cover = sqldf(Sql)
+  # 
+  #   # Plot the soil surface cover
+  # cat("  \n\n")
+  # print(
+  #   ggplot(Cover) +
+  #     geom_col(aes(x=reorder(ScientificName,-`% cover`),y=`% cover`)) +
+  #     ggtitle(paste("Mid-story cover: ",Ecotype,sep="")) +
+  #     theme_minimal() +
+  #     theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  #     xlab("Taxa") +
+  #     ylab("% cover")
+  # )
+  #   cat(" Figure ",FigureCounter,". Mid-story percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
+  #   cat("  \n\n")
+  #   FigureCounter = FigureCounter + 1
+  # 
+  # # Mid-story cover summary table
+  # Cover[nrow(Cover) + 1,] = c("TOTAL",sum(Cover$Hits),'',sum(Cover$`% cover`))
+  # cat("Table ",TableCounter,". Midstory cover in the ",Ecotype," ecotype.  \n\n")
+  # print(knitr::kable(Cover,digits=1))
+  # cat("  \n\n")
+  # TableCounter = TableCounter + 1
   
   
   
@@ -1095,7 +1191,8 @@ GetEcotypeSection = function(Ecotype){
       xlab("Taxa") +
       ylab("% cover")
   )
-      cat(" Figure B-3. Soil surface percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
+  cat("  \n\n")
+  cat(" Figure B-3. Soil surface percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
     cat("  \n\n")
     FigureCounter = FigureCounter + 1
   
@@ -1190,7 +1287,13 @@ Oosenbrug, S. M. (1976). *Range relationships and population dynamics of the Bu
 
 Oosenbrug, S. M., & Theberge, J. B. (1980). Altitudinal movements and summer habitat preferences of woodland caribou in the Kluane Ranges, Yukon Territory. *Arctic*, 59-72.
 
+Posit team (2024). RStudio: Integrated Development Environment for R. Posit Software, PBC, Boston, MA. URL <http://www.posit.co/.>
+
 Post, E., & Klein, D. R. (1999). Caribou calf production and seasonal range quality during a population decline. *The Journal of Wildlife Management*, 335-345.
+
+R Core Team (2024). \_R: A Language and Environment for Statistical Computing\_. R Foundation for Statistical Computing, Vienna, Austria. <https://www.R-project.org/>.
+
+Posit team (2024). RStudio: Integrated Development Environment for R. Posit Software, PBC, Boston, MA. URL <http://www.posit.co/.>
 
 Swanson, J. D., & Barker, M. H. W. (1992). Assessment of Alaska reindeer populations and range conditions. *Rangifer*, *12*(1), 33-43.
 
