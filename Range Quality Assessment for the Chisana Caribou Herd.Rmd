@@ -37,17 +37,22 @@ FigureCounter = 5
 
 ```
 
-```{r, echo=FALSE}
+
+
+
+```{r,label="Pull data from the database and write it to CSV files for archival", echo=FALSE,include=FALSE}
 # This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
 
 # Database connection 
 connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna_dev", Database = "ChisanaVegetation")
+
 
 # Function to Write a data frame to a file in the deliverables directory. This will be used as data is pulled from the database and written to files for archival in Data Store
 WriteDataFrameToFile = function(DataFrame,Filename){
   ExportFile = paste(DeliverablesDirectory,Filename,sep="")
   #write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
 }
+
 
 # Write the vegetation dataset to file
 # ----------------------------------------------------------------------------
@@ -115,63 +120,61 @@ Sql = "SELECT Plot
 , VersionDate
 FROM Dataset_VegData
 ORDER BY Plot, Line, PointLoc"
-Dataset_VegData = dbGetQuery(connection,Sql)
+#Dataset_VegData = dbGetQuery(connection,Sql)
 
 #Write the vegetation data to file
-#Filename = paste("CV-10 Chisana Range Vegetation Dataset.csv",sep="")
-#WriteDataFrameToFile(Dataset_VegData,Filename)
-
-# Get metadata for the dataset above
-#Metadata = dbGetQuery(connection,"SELECT [Column],[Definition] FROM Dataset_VegData_Metadata")
-#MetadataFilename = paste("CV-10 Chisana Range Vegetation Dataset ",Sys.Date()," Metadata - Column Descriptions.csv",sep="")
-#WriteDataFrameToFile(Metadata,MetadataFilename)
-
-
+#Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",Sys.Date(),".csv",sep="")
+# WriteDataFrameToFile(Dataset_VegData,Dataset_VegDataFilename)
+# 
+# # Get metadata for the dataset above
+# Metadata = dbGetQuery(connection,"SELECT [Column],[Definition] FROM Dataset_VegData_Metadata")
+# Dataset_VegDataMetadataFilename = paste(Dataset_VegDataFilename," Column Descriptions.csv",sep="")
+# WriteDataFrameToFile(Metadata,Dataset_VegDataMetadataFilename)
 
 
 
 # Write the sampling plots dataset to file
 # ----------------------------------------------------------------------------
-# Plots = dbGetQuery(connection,"SELECT  Plots.Plot
-# , Ecotypes.Ecotype
-# , Plots.EstablishDate
-# , Plots.Crew
-# , Plots.Elev_m
-# , Plots.Lat
-# as Latitude
-# , Plots.Lon as Longitude
-# , Plots.NTransectLitterType
-# , Plots.NTransectLitterDepth
-# , Plots.SETransectLitterType
-# , Plots.SETransectLitterDepth
-# , Plots.SWTransectLitterType
-# , Plots.SWTransectLitterDepth
-# , Plots.CaribouSign
-# , Plots.SlopePosition
-# , Plots.SlopeCrossSection
-# , Plots.Drainage
-# , Plots.MicroRelief
-# , Plots.MicroReliefSize
-# , Plots.ParentRock
-# , Plots.ParentMaterial
-# , Plots.GeoMorphicDisturbance
-# , Plots.EvidenceOfFrostAction
-# , Plots.EvidenceOfFire
-# , Plots.EvidenceOfWind
-# , Plots.WindExposureClass
-# , Plots.SlopeLength
-# , Plots.AvgPrecip
-# , Plots.AvgPrecipUOM
-# , Plots.EcolSite
-# , Plots.MaxSlope
-# , Plots.SlopeAsp
-# , Plots.Notes
-# , Plots.EcotypeID
-# FROM Plots 
-# INNER JOIN Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
-# WHERE (NOT (Plots.EstablishDate IS NULL)) -- Exclude plots that have not yet been surveyed.
-# ORDER BY Plots.Plot")
-
+ #Plots = dbGetQuery(connection,"SELECT  Plots.Plot
+ # , Ecotypes.Ecotype
+ # , Plots.EstablishDate
+ # , Plots.Crew
+ # , Plots.Elev_m
+ # , Plots.Lat
+ # as Latitude
+ # , Plots.Lon as Longitude
+ # , Plots.NTransectLitterType
+ # , Plots.NTransectLitterDepth
+ # , Plots.SETransectLitterType
+ # , Plots.SETransectLitterDepth
+ # , Plots.SWTransectLitterType
+ # , Plots.SWTransectLitterDepth
+ # , Plots.CaribouSign
+ # , Plots.SlopePosition
+ # , Plots.SlopeCrossSection
+ # , Plots.Drainage
+ # , Plots.MicroRelief
+ # , Plots.MicroReliefSize
+ # , Plots.ParentRock
+ # , Plots.ParentMaterial
+ # , Plots.GeoMorphicDisturbance
+ # , Plots.EvidenceOfFrostAction
+ # , Plots.EvidenceOfFire
+ # , Plots.EvidenceOfWind
+ # , Plots.WindExposureClass
+ # , Plots.SlopeLength
+ # , Plots.AvgPrecip
+ # , Plots.AvgPrecipUOM
+ # , Plots.EcolSite
+ # , Plots.MaxSlope
+ # , Plots.SlopeAsp
+ # , Plots.Notes
+ # , Plots.EcotypeID
+ # FROM Plots 
+ # INNER JOIN Ecotypes ON Plots.EcotypeID = Ecotypes.EcotypeID
+ # WHERE (NOT (Plots.EstablishDate IS NULL)) -- Exclude plots that have not yet been surveyed.
+ # ORDER BY Plots.Plot")
+ 
 # Write the sampling plots to file
 #Filename = paste("CV-10 Plots.csv",sep="")
 #WriteDataFrameToFile(Plots,Filename)
@@ -181,9 +184,9 @@ Dataset_VegData = dbGetQuery(connection,Sql)
 
 # Write the ecotypes dataset to file
 # ----------------------------------------------------------------------------
-#Ecotypes = dbGetQuery(connection,"SELECT Ecotype, DistinguishingFeatures, Cover, EcotypeID FROM Ecotypes ORDER BY Ecotype")
-#Filename = paste("CV-10 Ecotypes.csv",sep="")
-#WriteDataFrameToFile(Ecotypes,Filename)
+# Ecotypes = dbGetQuery(connection,"SELECT Ecotype, DistinguishingFeatures, Cover, EcotypeID FROM Ecotypes ORDER BY Ecotype")
+# Filename = paste("CV-10 Ecotypes.csv",sep="")
+# WriteDataFrameToFile(Ecotypes,Filename)
 
 
 
@@ -191,7 +194,7 @@ Dataset_VegData = dbGetQuery(connection,Sql)
 
 # Write the species list dataset to file
 # ----------------------------------------------------------------------------
-#SpeciesList = dbGetQuery(connection,"SELECT [Family]
+# SpeciesList = dbGetQuery(connection,"SELECT [Family]
 #       ,[Genus]
 #       ,[Species]
 #       ,[ScientificName]
@@ -206,20 +209,20 @@ Dataset_VegData = dbGetQuery(connection,Sql)
 #       ,[Invasive]
 #       ,[Notes]
 #       ,[SpeciesCode]
-#   FROM [ChisanaVegetation].[dbo].[SpeciesList] 
+#   FROM [ChisanaVegetation].[dbo].[SpeciesList]
 #   ORDER BY ScientificName")
 # Filename = paste("CV-10 Species List.csv",sep="")
-#WriteDataFrameToFile(SpeciesList,Filename)
+# WriteDataFrameToFile(SpeciesList,Filename)
 
 
 
 
 # Write the deliverables schedule to file
 # ----------------------------------------------------------------------------
-#DeliverablesSchedule = dbGetQuery(connection,"SELECT * FROM DeliverablesSchedule ORDER BY DeliverableID")
-# Write the deliverables schedule plots to file
-#Filename = paste("C-00 Deliverables Schedule - Chisana Vegetation Project.csv",sep="")
-#WriteDataFrameToFile(DeliverablesSchedule,Filename)
+# DeliverablesSchedule = dbGetQuery(connection,"SELECT * FROM DeliverablesSchedule ORDER BY DeliverableID")
+# #Write the deliverables schedule plots to file
+# Filename = paste("C-00 Deliverables Schedule - Chisana Vegetation Project.csv",sep="")
+# WriteDataFrameToFile(DeliverablesSchedule,Filename)
 
 
 
@@ -244,21 +247,37 @@ Dataset_VegData = dbGetQuery(connection,Sql)
 
 ```
 
-```{r, echo=FALSE}
+```{r,label="Load data files from Data Store", echo=FALSE}
+# Load data files
+# Deliverables for this project are on the J drive with the path stored in the DeliverablesDirectory variable.
+# In November 2024 they were moved to NPS Data Store at https://irma.nps.gov/DataStore/Reference/Profile/2306840.
+# File paths to the J drive were commented out and replaced with URLs to Data Store so that NPS personnel can run 
+# this markdown file from anywhere and reproduce the analyses done here.
+
 # Read in the Chisana vegetation dataset
-Dataset_VegData = read.csv(paste(DeliverablesDirectory,"CV-10 Chisana Range Vegetation Dataset.csv",sep=""),header=TRUE)
+#Dataset_VegDataPath = paste(DeliverablesDirectory,Dataset_VegDataFilename,sep="") # Network drive
+Dataset_VegDataPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711699)' # Data Store
+Dataset_VegData = read.csv(Dataset_VegDataPath,header=TRUE)
 
 # Read in the sampling plots dataset
-Plots = read.csv(paste(DeliverablesDirectory,"CV-10 Plots.csv",sep=""),header=TRUE)
+#PlotsPath = paste(DeliverablesDirectory,"CV-10 Plots.csv",sep="") # Network drive
+PlotsPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711702)' # Data Store
+Plots = read.csv(PlotsPath,header=TRUE)
 
 # Read in the ecotypes dataset
-Ecotypes  = read.csv(paste(DeliverablesDirectory,"CV-10 Ecotypes.csv",sep=""),header=TRUE)
+#EcotypesPath = paste(DeliverablesDirectory,"CV-10 Ecotypes.csv",sep="") # Network drive
+EcotypesPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711701)' # Data Store
+Ecotypes  = read.csv(EcotypesPath,header=TRUE)
 
 # Read in the fecal pellet dataset
-PelletData  = read.csv(paste(DeliverablesDirectory,"CP-05 Fecal pellet dataset.csv",sep=""),header=TRUE)
+#PelletDataPath = paste(DeliverablesDirectory,"CP-05 Fecal pellet dataset.csv",sep="") # Network drive
+PelletDataPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711686)' # Data Store
+PelletData  = read.csv(PelletDataPath,header=TRUE)
 
 # Read in the species list and species code abbreviations
-SpeciesList  = read.csv(paste(DeliverablesDirectory,"CV-10 Species List.csv",sep=""),header=TRUE)
+#SpeciesListPath = paste(DeliverablesDirectory,"CV-10 Species List.csv",sep="") # Network drive
+SpeciesListPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711703)'
+SpeciesList  = read.csv(SpeciesListPath,header=TRUE)
 
 ```
 
@@ -547,7 +566,7 @@ CoverData = sqldf(Sql)
 
 # Write the deliverables schedule plots to file
 # Filename = paste("CV-10 Percent Cover By Species.csv",sep="")
-# WriteDataFrameToFile(CoverData,Filename)
+WriteDataFrameToFile(CoverData,Filename)
 
 #knitr::kable(CoverData,digits=2)
 
@@ -846,7 +865,7 @@ TotalTransects = LitterType[1,"TotalNumberOfTransects"]
 
 # Write the GPS data to file
 # Filename = paste("CV-10 Caribou Ecotype Preference Spatial Data SENSITIVE ",Sys.Date(),".csv",sep="")
-# WriteDataFrameToFile(EcoPref,Filename)
+WriteDataFrameToFile(EcoPref,Filename)
 
 # Read in the caribou ecotype preference dataset
 
@@ -900,15 +919,15 @@ ggplot(EcoPrefByMonth) +
 
 ```
 
-## Fecal Pellet Analysis
+## Fecal Pellet Composition
 
-Pellet composition by plant.
+### Pellet composition by plant.
 
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by taxa having percent composition greater than one percent.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
-Sql = "SELECT Plant,Avg(PctComposition) as Mean,Count(*) as n 
+Sql = "SELECT Plant,Avg(PctComposition) as [Mean % composition],Count(*) as n 
 FROM PelletData 
 GROUP BY Plant 
 HAVING Avg(PctComposition) > 1
@@ -919,11 +938,17 @@ knitr::kable(PelletCompositionSummary,digits=1)
 
 TotalPelletDataObservations = nrow(PelletCompositionSummary)
 
-```
+ggplot(data=PelletCompositionSummary) +
+  geom_col(aes(x=reorder(Plant,-`Mean % composition`),y=`Mean % composition`)) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  xlab("Taxa") +
+  ylab("Mean % composition")
 
+```
 Total records = `r TotalPelletDataObservations`.
 
-Pellet percent composition by plant form.
+### Pellet percent composition by plant form.
 
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
 # Increment the table counter
@@ -937,6 +962,13 @@ ORDER BY Avg(PctComposition) DESC"
 PelletCompositionSummary = sqldf(Sql)
 knitr::kable(PelletCompositionSummary,digits=1)
 
+ggplot(data=PelletCompositionSummary) +
+  geom_col(aes(x=reorder(Form,-`Mean % composition`),y=`Mean % composition`)) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  xlab("Taxa") +
+  ylab("Mean % composition")
+
 TotalPelletDataObservations = nrow(PelletCompositionSummary)
 
 ```
@@ -945,7 +977,16 @@ Total records = `r TotalPelletDataObservations`.
 
 # Discussion
 
-To be written
+## Vegetation Cover
+
+### Lichen Layer Thickness and Biomass
+
+### Litter Depth and Composition
+
+### Caribou Ecotype Preference
+
+### Fecal Pellet Composition
+
 
 # Appendix A: Sampling Plots
 
@@ -988,6 +1029,9 @@ ggplot(Plots) +
   xlab("Plot")
 
 ```
+
+# EXIT MARKDOWN
+knitr::knit_exit()
 
 # Appendix B: Vegetation Summary By Ecotype
 
