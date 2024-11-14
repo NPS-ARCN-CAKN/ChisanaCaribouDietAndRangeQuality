@@ -348,6 +348,27 @@ Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST P
 
 Figure 3. Vegetation sampling sites in the Chisana caribou herd range. Sites visited in 2015 (green) and proposed for future study years (red) are labeled with site IDs. See Appendix A for the geographic locations of all sites.
 
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
+# Increment the figure counter
+FigureCounter = FigureCounter + 1
+
+# Map the units in Leaflet
+leaflet() %>%
+  
+  # Set the view and zoom levels
+  setView(lng = mean(Plots$Longitude), lat = mean(Plots$Latitude), zoom = 9) %>%
+  
+  # Add WMS tiles
+  addWMSTiles('https://basemap.nationalmap.gov:443/arcgis/services/USGSTopo/MapServer/WmsServer',layers = "0",options = WMSTileOptions(format = "image/png"))  %>%
+
+  # Add the points
+  addCircleMarkers(lng = Plots$Longitude, lat = Plots$Latitude, popup = Plots$Plot, color=) %>%
+ 
+  # Label the units 
+  addLabelOnlyMarkers(~Longitude,~Latitude, label = ~Plot, data = Plots,  labelOptions = labelOptions(noHide = TRUE))
+
+```
+
 ![](images/clipboard-3907250847.png)
 
 Fig 4. Plot design schematic showing locations of transects.
@@ -455,27 +476,6 @@ We collected fecal pellets from the range of the Chisana caribou herd in order t
 ## Statistical Software
 
 R (R Core Team, 2024) and R Studio software (Posit team, 2024) was used for all analyses.
-
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
-# Increment the figure counter
-FigureCounter = FigureCounter + 1
-
-# Map the units in Leaflet
-leaflet() %>%
-  
-  # Set the view and zoom levels
-  setView(lng = mean(Plots$Longitude), lat = mean(Plots$Latitude), zoom = 9) %>%
-  
-  # Add WMS tiles
-  addWMSTiles('https://basemap.nationalmap.gov:443/arcgis/services/USGSTopo/MapServer/WmsServer',layers = "0",options = WMSTileOptions(format = "image/png"))  %>%
-
-  # Add the points
-  addCircleMarkers(lng = Plots$Longitude, lat = Plots$Latitude, popup = Plots$Plot, color=) %>%
- 
-  # Label the units 
-  addLabelOnlyMarkers(~Longitude,~Latitude, label = ~Plot, data = Plots,  labelOptions = labelOptions(noHide = TRUE))
-
-```
 
 # Caribou Ecotype Preference
 
@@ -706,7 +706,7 @@ MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>%
 
 ```
 
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007). Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
 ggplot(MeanLichenHeightByEcotype) +
   # Mean lichen height column chart
@@ -736,7 +736,7 @@ TableCounter = TableCounter + 1
 
 ```
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean estimated lichen biomass (kg/Ha) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean estimated lichen biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007) Note that only one plot was sampled in the Forest ecotype..",sep="")}
 
 # Output the lichen estimated biomass by ecotype
 knitr::kable(MeanLichenHeightByEcotype %>% rename(SD=`SD (biomass)`) %>% select(Ecotype,Plots,Transects,`Estimated biomass (kg/ha)`,SD,n), digits = 2)
@@ -746,8 +746,6 @@ knitr::kable(MeanLichenHeightByEcotype %>% rename(SD=`SD (biomass)`) %>% select(
 TableCounter = TableCounter + 1
 
 ```
-
-
 
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by plot Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
