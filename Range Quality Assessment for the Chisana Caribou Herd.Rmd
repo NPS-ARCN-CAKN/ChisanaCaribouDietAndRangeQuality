@@ -22,6 +22,8 @@ library(odbc)
 library(leaflet)
 library(ggspatial)
 library(sf)
+library(corrplot)
+library(psych)
 
 # Paths to CAKN drive data and Data Store Project Reference
 # J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment
@@ -646,6 +648,7 @@ NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "W
 
 Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any species of lichens in their lichen height measument at each point intercept ("We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present").
 
+
 ```{r, echo=FALSE}
 
 # Get the lichen thickness and biomass data
@@ -745,6 +748,10 @@ FigureCounter=FigureCounter+1
 
 ```
 
+### Lichen thickness ANOVA by ecotype
+
+[THESE DATA ARE NOT NORMAL]
+
 ```{r}
 
 
@@ -758,45 +765,54 @@ tukey_result <- TukeyHSD(anova_result)
 tukey_result
 
 
-# Extract the p-values from Tukey's HSD results
-p_values <- tukey_result$Ecotype[, "p adj"]
 
-# Get the group names
-group_names <- unique(Dataset_VegData$Ecotype)
+# Create Q-Q plot
+data = Dataset_VegData %>% select(LichenHeight) %>% filter(is.na(LichenHeight)==FALSE)
+qqnorm(Dataset_VegData$LichenHeight)
+qqline(data, col = "red")
 
-# Create a matrix of NA values
-p_matrix <- matrix(NA, nrow = length(group_names), ncol = length(group_names))
-rownames(p_matrix) <- group_names
-colnames(p_matrix) <- group_names
+# Perform Shapiro-Wilk test
+shapiro.test(Dataset_VegData$LichenHeight)
 
-# Fill the matrix with p-values
-combinations <- combn(group_names, 2)
-for (i in 1:ncol(combinations)) {
-  group1 <- combinations[1, i]
-  group2 <- combinations[2, i]
-  p_matrix[group1, group2] <- p_values[i]
-  p_matrix[group2, group1] <- p_values[i]
-}
-
-as.data.frame(p_matrix)
-
+ks.test(Dataset_VegData$LichenHeight, "pnorm", mean = mean(Dataset_VegData$LichenHeight), sd = sd(Dataset_VegData$LichenHeight))
 
 ```
 
-```{r,results='asis'}
+### Basic stats on lichen thicknes
+
+```{r,echo=FALSE}
 library(corrplot)
 library(psych)
+
+Thickness = Dataset_VegData %>% select(LichenHeight,Ecotype) %>% filter(is.na(LichenHeight)==FALSE)
+knitr::kable(t(describe(Thickness$LichenHeight)))
+
+# Plot the dataset
+Binwidth <- (max(Thickness$LichenHeight,na.rm=TRUE) - min(Thickness$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Thickness)) )
+ggplot(Thickness) + 
+  geom_histogram(aes(x=LichenHeight,fill=Ecotype),na.rm=TRUE,binwidth=Binwidth) + 
+  theme_minimal() +
+  ggtitle("Lichen thickness")
+
+ggplot(Thickness) + 
+  geom_boxplot(aes(y=LichenHeight,fill=Ecotype),na.rm=TRUE) + 
+  theme_minimal() +
+  ggtitle("Lichen thickness")
+
+```
+
+```{r,results='asis',echo=FALSE}
 
 SummarizeThickness = function(Ecotype){
   Thickness = Dataset_VegData %>% filter(Ecotype==!!Ecotype & is.na(LichenHeight)==FALSE) %>% select(Ecotype,LichenHeight)
 
   # Describe the dataset
-  cat("# ",Ecotype,"  \n\n")
-  print(t(describe(Thickness$LichenHeight)))
+  cat("#### ",Ecotype,"  \n\n")
+  print(knitr::kable(t(describe(Thickness$LichenHeight))))
   cat("  \n\n")
   
   # Plot the dataset
-  Binwidth <- (max(Thickness$LichenHeight,na.rm=TRUE) - min(Thickness$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Thickness)) + 1)
+  Binwidth <- (max(Thickness$LichenHeight,na.rm=TRUE) - min(Thickness$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Thickness)) )
   print(
     ggplot(Thickness) + 
     geom_histogram(aes(x=LichenHeight),na.rm=TRUE,binwidth=Binwidth) + 
@@ -812,7 +828,6 @@ for (i in 1:nrow(EcotypesList)) {
   Ecotype = EcotypesList[i,1]
   SummarizeThickness(Ecotype)
 }
-
 
 ```
 
