@@ -37,9 +37,6 @@ FigureCounter = 5
 
 ```
 
-
-
-
 ```{r,label="Pull data from the database and write it to CSV files for archival", echo=FALSE,include=FALSE}
 # This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
 
@@ -748,6 +745,80 @@ FigureCounter=FigureCounter+1
 
 ```
 
+```{r}
+
+
+# Perform the ANOVA 
+anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData) 
+# Print the summary of the ANOVA result 
+summary(anova_result)
+
+# Perform Tukey's HSD test o
+tukey_result <- TukeyHSD(anova_result) 
+tukey_result
+
+
+# Extract the p-values from Tukey's HSD results
+p_values <- tukey_result$Ecotype[, "p adj"]
+
+# Get the group names
+group_names <- unique(Dataset_VegData$Ecotype)
+
+# Create a matrix of NA values
+p_matrix <- matrix(NA, nrow = length(group_names), ncol = length(group_names))
+rownames(p_matrix) <- group_names
+colnames(p_matrix) <- group_names
+
+# Fill the matrix with p-values
+combinations <- combn(group_names, 2)
+for (i in 1:ncol(combinations)) {
+  group1 <- combinations[1, i]
+  group2 <- combinations[2, i]
+  p_matrix[group1, group2] <- p_values[i]
+  p_matrix[group2, group1] <- p_values[i]
+}
+
+as.data.frame(p_matrix)
+
+
+```
+
+```{r,results='asis'}
+library(corrplot)
+library(psych)
+
+SummarizeThickness = function(Ecotype){
+  Thickness = Dataset_VegData %>% filter(Ecotype==!!Ecotype & is.na(LichenHeight)==FALSE) %>% select(Ecotype,LichenHeight)
+
+  # Describe the dataset
+  cat("# ",Ecotype,"  \n\n")
+  print(t(describe(Thickness$LichenHeight)))
+  cat("  \n\n")
+  
+  # Plot the dataset
+  Binwidth <- (max(Thickness$LichenHeight,na.rm=TRUE) - min(Thickness$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Thickness)) + 1)
+  print(
+    ggplot(Thickness) + 
+    geom_histogram(aes(x=LichenHeight),na.rm=TRUE,binwidth=Binwidth) + 
+    theme_minimal() +
+    ggtitle(Ecotype)
+  )
+  cat("  \n\n")
+}
+
+EcotypesList = as.data.frame(unique(Dataset_VegData$Ecotype))
+#
+for (i in 1:nrow(EcotypesList)) { 
+  Ecotype = EcotypesList[i,1]
+  SummarizeThickness(Ecotype)
+}
+
+
+```
+
+
+
+
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
 
 # Output the lichen thickness by ecotype
@@ -948,6 +1019,7 @@ ggplot(data=PelletCompositionSummary) +
   ylab("Mean % composition")
 
 ```
+
 Total records = `r TotalPelletDataObservations`.
 
 ### Pellet percent composition by plant form.
@@ -981,14 +1053,23 @@ Total records = `r TotalPelletDataObservations`.
 
 ## Vegetation Cover
 
+Foliar cover is dominated by Betula glandulosa 17%, Unknown sedge, 12% Dryas octopetala, 9% and Salix spp. at 8%. Basal cover is overwhelmingly dominated by Moss, 42% Unknown sedges 6%, Cladonia sp. 5% Stereocaulon sp. 4% Cetraria sp. 3% Empetrum nigrum 3% Peltigera sp. 2%
+
 ### Lichen Layer Thickness and Biomass
+
+Lichen layer thickness ranged from 0.83cm in riverine habitats to 1.7cm in the Alpine Sedge-Dwarf Shrub ecotype, excluding the Forest ecotype where we only had one sample with a mean thickness of 2.77 cm.
+
+[It's interesting that caribou seem to avoid Forest ecotype even though it has the most lichen. Possibly deep snow, insects, or predation?]
 
 ### Litter Depth and Composition
 
 ### Caribou Ecotype Preference
 
-### Fecal Pellet Composition
+Caribou seem to use the Alpine Sedge-Dwarf Shrub ecotype year round and this ecotype showed the thickest lichen layer of all ecotypes except the Forest ecotype.
 
+Caribou show distinct seasonal use of the Alpine Dwarf Shrub/Barrens ecotype, migrating out in the winter and in during the summer. [Insect relief?]
+
+### Fecal Pellet Composition
 
 # Appendix A: Sampling Plots
 
@@ -1033,7 +1114,10 @@ ggplot(Plots) +
 ```
 
 # EXIT MARKDOWN
+
+```{r}
 knitr::knit_exit()
+```
 
 # Appendix B: Vegetation Summary By Ecotype
 
