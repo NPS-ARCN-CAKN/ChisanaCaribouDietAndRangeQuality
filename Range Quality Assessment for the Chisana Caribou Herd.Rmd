@@ -566,7 +566,7 @@ CoverData = sqldf(Sql)
 
 # Write the deliverables schedule plots to file
 # Filename = paste("CV-10 Percent Cover By Species.csv",sep="")
-WriteDataFrameToFile(CoverData,Filename)
+# WriteDataFrameToFile(CoverData,Filename)
 
 #knitr::kable(CoverData,digits=2)
 
