@@ -50,83 +50,20 @@ connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nun
 WriteDataFrameToFile = function(DataFrame,Filename){
   ExportFile = paste(DeliverablesDirectory,Filename,sep="")
   print(paste("Writing ",ExportFile,"\n",sep=""))
-  print("FAILED: Writing is temporarily disabled by a comment")
-  #write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
-  #print(paste("Wrote ",ExportFile,"\n",sep=""))
+  #print("FAILED: Writing is temporarily disabled by a comment")
+  write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
+  print(paste("Wrote ",ExportFile,"\n",sep=""))
 }
 
 
 # Write the vegetation dataset to file
 # ----------------------------------------------------------------------------
-Sql = "SELECT Plot
-, Line
-, PointLoc
-, TopCanopy
-, TopCanopyScientificName
-, TopCanopyCommonName
-, TopCanopyLifeForm
-, TopCanopyGrowthHabit
-, TopCanopyGrowthHabitSub
-, Lower1
-, Lower1ScientificName
-, Lower1CommonName
-, Lower1LifeForm
-, Lower1GrowthHabit
-, Lower1GrowthHabitSub
-, Lower2
-, Lower2ScientificName
-, Lower2CommonName
-, Lower2LifeForm
-, Lower2GrowthHabit
-, Lower2GrowthHabitSub
-, Lower3
-, Lower3ScientificName
-, Lower3CommonName
-, Lower3LifeForm
-, Lower3GrowthHabit
-, Lower3GrowthHabitSub
-, SoilSurface
-, SoilSurfaceScientificName
-, SoilSurfaceCommonName
-, SoilSurfaceLifeForm
-, SoilSurfaceGrowthHabit
-, SoilSurfaceGrowthHabitSub
-, SoilSurfaceDescription
-, LichenHeight
-, Ecotype
-, Lat
-, Lon
-, Elev_m
-, SlopePosition
-, SlopeLength
-, SlopeCrossSection
-, ParentRock
-, Drainage
-, AvgPrecip
-, AvgPrecipUOM
-, EcolSite
-, ParentMaterial
-, MicroRelief
-, MicroReliefSize
-, GeoMorphicDisturbance
-, EvidenceOfFrostAction
-, MaxSlope
-, EvidenceOfWind
-, WindExposureClass
-, CaribouSign
-, EvidenceOfFire
-, SlopeAsp
-, Date
-, Crew
-, EcotypeID
-, VersionDate
-FROM Dataset_VegData
-ORDER BY Plot, Line, PointLoc"
-#Dataset_VegData = dbGetQuery(connection,Sql)
+Sql = "SELECT * FROM [ChisanaVegetation].[dbo].[Dataset_VegData]"
+Dataset_VegData = dbGetQuery(connection,Sql)
 
 #Write the vegetation data to file
-#Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",Sys.Date(),".csv",sep="")
-# WriteDataFrameToFile(Dataset_VegData,Dataset_VegDataFilename)
+Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",Sys.Date(),".csv",sep="")
+#WriteDataFrameToFile(Dataset_VegData,Dataset_VegDataFilename)
 # 
 # # Get metadata for the dataset above
 # Metadata = dbGetQuery(connection,"SELECT [Column],[Definition] FROM Dataset_VegData_Metadata")
@@ -258,7 +195,7 @@ ORDER BY Plot, Line, PointLoc"
 
 # Read in the Chisana vegetation dataset
 #Dataset_VegDataPath = paste(DeliverablesDirectory,Dataset_VegDataFilename,sep="") # Network drive
-Dataset_VegDataPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711699)' # Data Store
+Dataset_VegDataPath = r'(https://irma.nps.gov/DataStore/DownloadFile/713149)' # Data Store
 Dataset_VegData = read.csv(Dataset_VegDataPath,header=TRUE)
 
 # Read in the sampling plots dataset
@@ -684,8 +621,66 @@ ORDER BY [Mean lichen thickness (cm)]  DESC"
 Biomass = sqldf(Sql)
 
 ```
+### LichenHeight data checking [not for publication]
 
-```{r}
+Descriptive statistics on lichen height data
+
+```{r,label="LichenHeight descriptive statistics"}
+
+# Descriptive statistics
+df = describe(Dataset_VegData$LichenHeight)
+df <- data.frame(Statistic = rownames(df), df) 
+rownames(df) <- NULL # Remove row names
+df[1,1] = ''
+knitr::kable(t(df))
+
+```
+
+Tests of normality
+
+```{r,label="Lichen height: Normality plots"}
+
+Binwidth <- (max(Dataset_VegData$LichenHeight,na.rm=TRUE) - min(Dataset_VegData$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Dataset_VegData %>% filter(is.na(LichenHeight)==FALSE))) )
+ggplot(Dataset_VegData) + 
+    geom_histogram(aes(x=LichenHeight),na.rm=TRUE,binwidth=Binwidth) + 
+    theme_minimal() +
+    ggtitle("Distribution of lichen thickness data")
+
+# Create Quantile-Quantile plot
+data = Dataset_VegData %>% select(LichenHeight) %>% filter(is.na(LichenHeight)==FALSE)
+qqnorm(Dataset_VegData$LichenHeight)
+qqline(data, col = "red")
+
+# Perform Shapiro-Wilk test
+shapiro.test(Dataset_VegData$LichenHeight)
+
+ks.test(Dataset_VegData$LichenHeight, "pnorm", mean = mean(Dataset_VegData$LichenHeight), sd = sd(Dataset_VegData$LichenHeight))
+
+```
+
+ANOVA and Tukey's test on lichen height by ecotype
+
+These ecotypes are functionally the same lichen thickness
+                                                         diff         lwr         upr     p adj
+Alpine Sedge-Dwarf Shrub and Alpine Meadow        0.15991516 -0.25270469  0.57253502 0.8781186
+Subalpine Wood/Shrub and Alpine Meadow            0.12912649 -0.25371367  0.51196664 0.9290281
+Subalpine Wood/Shrub and Alpine Sedge-Dwarf Shrub  -0.03078868 -0.49552937  0.43395202 0.9999664
+
+
+
+
+
+```{r,label="Lichen height: ANOVA of LichenHeight ~ Ecotype"}
+print('ANOVA: LichenHeight ~ Ecotype')
+# Perform the ANOVA 
+anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData)
+anova_result
+Tukey = TukeyHSD(anova_result) 
+Tukey
+knitr::kable(Tukey$Ecotype)
+```
+
+```{r,label="Create mean lichen height by plot dataset}
 
 # Moen et al. (2007) lichen thickness to biomass conversion
 LichenHtToBiomassConversionFactor = 1135.6 
@@ -728,6 +723,8 @@ MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>%
 
 ```
 
+### Lichen Thickness and Biomass by Ecotype
+
 ```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007). Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
 ggplot(MeanLichenHeightByEcotype) +
@@ -748,88 +745,7 @@ FigureCounter=FigureCounter+1
 
 ```
 
-### Lichen thickness ANOVA by ecotype
 
-[THESE DATA ARE NOT NORMAL]
-
-```{r}
-
-
-# Perform the ANOVA 
-anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData) 
-# Print the summary of the ANOVA result 
-summary(anova_result)
-
-# Perform Tukey's HSD test o
-tukey_result <- TukeyHSD(anova_result) 
-tukey_result
-
-
-
-# Create Q-Q plot
-data = Dataset_VegData %>% select(LichenHeight) %>% filter(is.na(LichenHeight)==FALSE)
-qqnorm(Dataset_VegData$LichenHeight)
-qqline(data, col = "red")
-
-# Perform Shapiro-Wilk test
-shapiro.test(Dataset_VegData$LichenHeight)
-
-ks.test(Dataset_VegData$LichenHeight, "pnorm", mean = mean(Dataset_VegData$LichenHeight), sd = sd(Dataset_VegData$LichenHeight))
-
-```
-
-### Basic stats on lichen thicknes
-
-```{r,echo=FALSE}
-library(corrplot)
-library(psych)
-
-Thickness = Dataset_VegData %>% select(LichenHeight,Ecotype) %>% filter(is.na(LichenHeight)==FALSE)
-knitr::kable(t(describe(Thickness$LichenHeight)))
-
-# Plot the dataset
-Binwidth <- (max(Thickness$LichenHeight,na.rm=TRUE) - min(Thickness$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Thickness)) )
-ggplot(Thickness) + 
-  geom_histogram(aes(x=LichenHeight,fill=Ecotype),na.rm=TRUE,binwidth=Binwidth) + 
-  theme_minimal() +
-  ggtitle("Lichen thickness")
-
-ggplot(Thickness) + 
-  geom_boxplot(aes(y=LichenHeight,fill=Ecotype),na.rm=TRUE) + 
-  theme_minimal() +
-  ggtitle("Lichen thickness")
-
-```
-
-```{r,results='asis',echo=FALSE}
-
-SummarizeThickness = function(Ecotype){
-  Thickness = Dataset_VegData %>% filter(Ecotype==!!Ecotype & is.na(LichenHeight)==FALSE) %>% select(Ecotype,LichenHeight)
-
-  # Describe the dataset
-  cat("#### ",Ecotype,"  \n\n")
-  print(knitr::kable(t(describe(Thickness$LichenHeight))))
-  cat("  \n\n")
-  
-  # Plot the dataset
-  Binwidth <- (max(Thickness$LichenHeight,na.rm=TRUE) - min(Thickness$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Thickness)) )
-  print(
-    ggplot(Thickness) + 
-    geom_histogram(aes(x=LichenHeight),na.rm=TRUE,binwidth=Binwidth) + 
-    theme_minimal() +
-    ggtitle(Ecotype)
-  )
-  cat("  \n\n")
-}
-
-EcotypesList = as.data.frame(unique(Dataset_VegData$Ecotype))
-#
-for (i in 1:nrow(EcotypesList)) { 
-  Ecotype = EcotypesList[i,1]
-  SummarizeThickness(Ecotype)
-}
-
-```
 
 
 
