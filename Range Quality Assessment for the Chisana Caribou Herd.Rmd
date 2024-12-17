@@ -215,7 +215,7 @@ PelletData  = read.csv(PelletDataPath,header=TRUE)
 
 # Read in the species list and species code abbreviations
 #SpeciesListPath = paste(DeliverablesDirectory,"CV-10 Species List.csv",sep="") # Network drive
-SpeciesListPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711703)'
+SpeciesListPath = r'(https://irma.nps.gov/DataStore/DownloadFile/713193)'
 SpeciesList  = read.csv(SpeciesListPath,header=TRUE)
 
 ```
@@ -521,17 +521,34 @@ Results:
 
 -   Overall foliar plant cover in the vegetation plots we sampled was dominated by dwarf birch, sedges, *Dryas* and willow, species emblematic of alpine tundra.
 
+```{r, label="Foliar cover figure",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Foliar percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
+FoliarCover = sqldf("SELECT ScientificName as Taxa,PctCover_TopCanopy as [% cover] 
+FROM CoverData 
+WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+And PctCover_TopCanopy > 1
+AND PctCover_TopCanopy > 0
+ORDER BY PctCover_TopCanopy DESC")
+
+ggplot(FoliarCover) +
+      geom_col(aes(x=reorder(Taxa,-`% cover`),y=`% cover`)) +
+      ggtitle("Foliar cover") +
+      xlab("Point intercept") +
+      theme_minimal() +
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+      xlab("Taxa") +
+      ylab("% cover")
+
+# Increment the figure counter
+FigureCounter = FigureCounter + 1
+```
+
+
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
 # Print the foliar (TopCanopy stratum) cover.
-knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_TopCanopy as [% cover] 
-FROM CoverData 
-WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
-And PctCover_TopCanopy > 1
-AND PctCover_TopCanopy > 0
-ORDER BY PctCover_TopCanopy DESC"),digits=0)
+knitr::kable(FoliarCover,digits=0)
 ```
 
 <!-- ### Mid-story Cover -->
@@ -564,18 +581,33 @@ ORDER BY PctCover_TopCanopy DESC"),digits=0)
 
 \*Unweighted by ecotype area.
 
+```{r, label="Basal cover figure",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Basal percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
+BasalCover = sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
+FROM CoverData 
+WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
+And PctCover_TopCanopy > 1
+AND PctCover_TopCanopy > 0
+ORDER BY PctCover_TopCanopy DESC")
+
+ggplot(BasalCover) +
+      geom_col(aes(x=reorder(Taxa,-`% cover`),y=`% cover`)) +
+      ggtitle("Basal cover") +
+      xlab("Point intercept") +
+      theme_minimal() +
+      theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+      xlab("Taxa") +
+      ylab("% cover")
+
+# Increment the figure counter
+FigureCounter = FigureCounter + 1
+```
+
 ```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
 # Print the basal (SoilSurface stratum) cover.
-knitr::kable(sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
-FROM CoverData 
-WHERE 
--- GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
-GrowthHabitSub NOT IN ('Abiotic')
-AND PctCover_SoilSurface > 0.1
-ORDER BY PctCover_SoilSurface DESC"),digits=0)
+knitr::kable(BasalCover,digits=0)
 
 ```
 
@@ -621,18 +653,16 @@ ORDER BY [Mean lichen thickness (cm)]  DESC"
 Biomass = sqldf(Sql)
 
 ```
-### LichenHeight data checking [not for publication]
 
-Descriptive statistics on lichen height data
 
 ```{r,label="LichenHeight descriptive statistics"}
 
 # Descriptive statistics
-df = describe(Dataset_VegData$LichenHeight)
-df <- data.frame(Statistic = rownames(df), df) 
-rownames(df) <- NULL # Remove row names
-df[1,1] = ''
-knitr::kable(t(df))
+# df = describe(Dataset_VegData$LichenHeight)
+# df <- data.frame(Statistic = rownames(df), df) 
+# rownames(df) <- NULL # Remove row names
+# df[1,1] = ''
+# knitr::kable(t(df))
 
 ```
 
@@ -640,47 +670,41 @@ Tests of normality
 
 ```{r,label="Lichen height: Normality plots"}
 
-Binwidth <- (max(Dataset_VegData$LichenHeight,na.rm=TRUE) - min(Dataset_VegData$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Dataset_VegData %>% filter(is.na(LichenHeight)==FALSE))) )
-ggplot(Dataset_VegData) + 
-    geom_histogram(aes(x=LichenHeight),na.rm=TRUE,binwidth=Binwidth) + 
-    theme_minimal() +
-    ggtitle("Distribution of lichen thickness data")
-
-# Create Quantile-Quantile plot
-data = Dataset_VegData %>% select(LichenHeight) %>% filter(is.na(LichenHeight)==FALSE)
-qqnorm(Dataset_VegData$LichenHeight)
-qqline(data, col = "red")
-
-# Perform Shapiro-Wilk test
-shapiro.test(Dataset_VegData$LichenHeight)
-
-ks.test(Dataset_VegData$LichenHeight, "pnorm", mean = mean(Dataset_VegData$LichenHeight), sd = sd(Dataset_VegData$LichenHeight))
+# Binwidth <- (max(Dataset_VegData$LichenHeight,na.rm=TRUE) - min(Dataset_VegData$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Dataset_VegData %>% filter(is.na(LichenHeight)==FALSE))) )
+# ggplot(Dataset_VegData) + 
+#     geom_histogram(aes(x=LichenHeight),na.rm=TRUE,binwidth=Binwidth) + 
+#     theme_minimal() +
+#     ggtitle("Distribution of lichen thickness data")
+# 
+# # Create Quantile-Quantile plot
+# data = Dataset_VegData %>% select(LichenHeight) %>% filter(is.na(LichenHeight)==FALSE)
+# qqnorm(Dataset_VegData$LichenHeight)
+# qqline(data, col = "red")
+# 
+# # Perform Shapiro-Wilk test
+# shapiro.test(Dataset_VegData$LichenHeight)
+# 
+# ks.test(Dataset_VegData$LichenHeight, "pnorm", mean = mean(Dataset_VegData$LichenHeight), sd = sd(Dataset_VegData$LichenHeight))
 
 ```
-
-ANOVA and Tukey's test on lichen height by ecotype
-
-These ecotypes are functionally the same lichen thickness
-                                                         diff         lwr         upr     p adj
-Alpine Sedge-Dwarf Shrub and Alpine Meadow        0.15991516 -0.25270469  0.57253502 0.8781186
-Subalpine Wood/Shrub and Alpine Meadow            0.12912649 -0.25371367  0.51196664 0.9290281
-Subalpine Wood/Shrub and Alpine Sedge-Dwarf Shrub  -0.03078868 -0.49552937  0.43395202 0.9999664
-
-
-
 
 
 ```{r,label="Lichen height: ANOVA of LichenHeight ~ Ecotype"}
-print('ANOVA: LichenHeight ~ Ecotype')
-# Perform the ANOVA 
-anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData)
-anova_result
-Tukey = TukeyHSD(anova_result) 
-Tukey
-knitr::kable(Tukey$Ecotype)
+# print('ANOVA: LichenHeight ~ Ecotype')
+# # Perform the ANOVA 
+# Dataset_VegData$Ecotype = gsub("-","/",Ecotypes$Ecotype)
+# anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData)
+# anova_result
+# Tukey = TukeyHSD(anova_result) 
+# 
+# tukey_df = as.data.frame(Tukey$Ecotype)
+# tukey_df$comparison = rownames(tukey_df)
+# rownames(tukey_df) <- NULL
+# 
+# ColumnNames = colnames(tukey_df)
 ```
 
-```{r,label="Create mean lichen height by plot dataset}
+```{r,label="Create mean lichen height by plot dataset"}
 
 # Moen et al. (2007) lichen thickness to biomass conversion
 LichenHtToBiomassConversionFactor = 1135.6 
@@ -1044,11 +1068,7 @@ ggplot(Plots) +
 
 ```
 
-# EXIT MARKDOWN
 
-```{r}
-knitr::knit_exit()
-```
 
 # Appendix B: Vegetation Summary By Ecotype
 
