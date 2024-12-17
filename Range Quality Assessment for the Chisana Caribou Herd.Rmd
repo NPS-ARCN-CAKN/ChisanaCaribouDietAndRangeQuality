@@ -9,7 +9,7 @@ output:
     toc_float: true
 ---
 
-```{r,label="setup", include=FALSE, echo=FALSE}
+```{r,label="Setup", include=FALSE, echo=FALSE}
 
 # Global NA to blank
 options(knitr.kable.NA = '')
@@ -40,6 +40,7 @@ FigureCounter = 5
 ```
 
 ```{r,label="Pull data from the database and write it to CSV files for archival", echo=FALSE,include=FALSE}
+
 # This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
 
 # Database connection 
@@ -51,13 +52,12 @@ WriteDataFrameToFile = function(DataFrame,Filename){
   ExportFile = paste(DeliverablesDirectory,Filename,sep="")
   print(paste("Writing ",ExportFile,"\n",sep=""))
   #print("FAILED: Writing is temporarily disabled by a comment")
-  write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
-  print(paste("Wrote ",ExportFile,"\n",sep=""))
+  #write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
+  #print(paste("Wrote ",ExportFile,"\n",sep=""))
 }
 
 
 # Write the vegetation dataset to file
-# ----------------------------------------------------------------------------
 Sql = "SELECT * FROM [ChisanaVegetation].[dbo].[Dataset_VegData]"
 Dataset_VegData = dbGetQuery(connection,Sql)
 
@@ -73,7 +73,6 @@ Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",S
 
 
 # Write the sampling plots dataset to file
-# ----------------------------------------------------------------------------
  #Plots = dbGetQuery(connection,"SELECT  Plots.Plot
  # , Ecotypes.Ecotype
  # , Plots.EstablishDate
@@ -122,7 +121,6 @@ Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",S
 
 
 # Write the ecotypes dataset to file
-# ----------------------------------------------------------------------------
 # Ecotypes = dbGetQuery(connection,"SELECT Ecotype, DistinguishingFeatures, Cover, EcotypeID FROM Ecotypes ORDER BY Ecotype")
 # Filename = paste("CV-10 Ecotypes.csv",sep="")
 # WriteDataFrameToFile(Ecotypes,Filename)
@@ -132,7 +130,6 @@ Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",S
 
 
 # Write the species list dataset to file
-# ----------------------------------------------------------------------------
 # SpeciesList = dbGetQuery(connection,"SELECT [Family]
 #       ,[Genus]
 #       ,[Species]
@@ -157,7 +154,6 @@ Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",S
 
 
 # Write the deliverables schedule to file
-# ----------------------------------------------------------------------------
 # DeliverablesSchedule = dbGetQuery(connection,"SELECT * FROM DeliverablesSchedule ORDER BY DeliverableID")
 # #Write the deliverables schedule plots to file
 # Filename = paste("C-00 Deliverables Schedule - Chisana Vegetation Project.csv",sep="")
@@ -165,10 +161,7 @@ Dataset_VegDataFilename = paste("CV-10 Chisana Range Vegetation Dataset Ver. ",S
 
 
 
-
 # Write the fecal pellet dataset to file
-# ----------------------------------------------------------------------------
-
 # Notes on data processing steps to get to a good pellet dataset:
 # The lab shipped a file to JAP (Putera 34 results.xlsx). The data was good in a pivoted, wide format that was untidy. 
 # I cleaned it (Putera 34 results Copy.xlsx) and reformatted into a long and tidy (2015 Chisana Caribou Fecal Pellet Data.xlsx) format and imported it into the database (inpyugamsvm01\nuna_dev:ChisanaVeg).
@@ -242,6 +235,26 @@ Summer forage is also an important component of caribou habitat. Low recruitment
 
 # Methods
 
+```{r, label="Merkhofer's ecotypes assignment process", include=FALSE}
+
+
+# NOTES: It appears that Merkhofer took Jorgenson et al. 2008's landcover classification and merged various subecotypes together into larger ecotypes. The Major ecotype column in Table 1, below, is Merkhofer's ecotype derived from the 'Included detailed ecotypes' which come from Jorgenson.
+
+# Merkhofer documented her GIS work well in \\inpyugamsstor00\Primary Datapool\I&M\CAKN\CAKN2\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\Chisana Vegetation Sampling\)
+
+# Merkhofer's steps as I can reproduce them:
+
+# 1. She loaded Jorgenson's landcover into a geodatabase: J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\GIS\ChisanaCaribouHabitat.gdb as WRSTEcotypes2008Chisana
+
+# 2. She combined various cover classes into larger major ecotypes and added a SamplingGroup column (example SWB corresponding to Subalpine Wood/Shrub)
+
+# 3. These merged major ecotypes became a feature class Ecotypes_in_one_shapefile. This layer is what is shown in Figure 2 of the Merkhofer, 2015 report
+
+# 4. She then chose potential veg plot locations in the major ecotypes for locating sampling plots (Chisana_Veg_Sampling_Points in the geodatabase, APPENDIX A. RANDOM SITE LOCATIONS AND STUDY STATUS in her report)
+
+
+```
+
 ## Study Area
 
 We focus on the core range of the CCH within WRST National Park and Preserve boundaries. This area forms the basin between the Wrangell, St. Elias, and Nutzotin Mountains, containing the Chisana and White Rivers and the historic town of Chisana. Study area limits were defined to include the bulk of CCH radio collar signals recorded between 1988 and 2015 (Fig. 1; J. Putera, unpublished data, 2015). The resulting area is 2795 km^2^ (1079 miles^2^ ) and contains moderate to high elevations, from 1000 - 2500 m (3281–8202 ft).
@@ -306,7 +319,7 @@ Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST P
 
 Figure 3. Vegetation sampling sites in the Chisana caribou herd range. Sites visited in 2015 (green) and proposed for future study years (red) are labeled with site IDs. See Appendix A for the geographic locations of all sites.
 
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
+```{r, label="Map of sampling plots", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
 # Increment the figure counter
 FigureCounter = FigureCounter + 1
 
@@ -375,7 +388,7 @@ Table 1. Ecotypes of Chisana caribou herd range, ranked by percent cover.
 
 Why only one plot in Forest? Merkhofer: "We found that Forest ecotypes made for difficult helicopter landing access and subsequently sampled only one site from this ecotype. Future sampling should be targeted to these under-sampled ecotypes."
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Number of plots by ecotype.",sep="")}
+```{r, label="Table of number of plots by ecotype", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Number of plots by ecotype.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
@@ -407,26 +420,6 @@ where T is mean lichen mat thickness (cm).
 
 Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss.
 
-```{r, include=FALSE}
-
-
-# NOTES: It appears that Merkhofer took Jorgenson et al. 2008's landcover classification and merged various subecotypes together into larger ecotypes. The Major ecotype column in Table 1, below, is Merkhofer's ecotype derived from the 'Included detailed ecotypes' which come from Jorgenson.
-
-# Merkhofer documented her GIS work well in \\inpyugamsstor00\Primary Datapool\I&M\CAKN\CAKN2\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\Chisana Vegetation Sampling\)
-
-# Merkhofer's steps as I can reproduce them:
-
-# 1. She loaded Jorgenson's landcover into a geodatabase: J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment\Data\Habitat\GIS\ChisanaCaribouHabitat.gdb as WRSTEcotypes2008Chisana
-
-# 2. She combined various cover classes into larger major ecotypes and added a SamplingGroup column (example SWB corresponding to Subalpine Wood/Shrub)
-
-# 3. These merged major ecotypes became a feature class Ecotypes_in_one_shapefile. This layer is what is shown in Figure 2 of the Merkhofer, 2015 report
-
-# 4. She then chose potential veg plot locations in the major ecotypes for locating sampling plots (Chisana_Veg_Sampling_Points in the geodatabase, APPENDIX A. RANDOM SITE LOCATIONS AND STUDY STATUS in her report)
-
-
-```
-
 ## Fecal Pellet Analysis
 
 We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab
@@ -443,7 +436,7 @@ I performed a spatial join of the GPS collar data over the major ecotypes to see
 
 ## Vegetation Cover
 
-```{r, echo=FALSE}
+```{r, label="Dataset: Generate percent cover dataset", echo=FALSE}
 
 # Calculate percent cover from the vegetation dataset for each species over the entire dataset 
 # Start by getting the entire list of species
@@ -521,7 +514,7 @@ Results:
 
 -   Overall foliar plant cover in the vegetation plots we sampled was dominated by dwarf birch, sedges, *Dryas* and willow, species emblematic of alpine tundra.
 
-```{r, label="Foliar cover figure",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Foliar percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
+```{r, label="Figure: Foliar percent cover",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Foliar percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
 FoliarCover = sqldf("SELECT ScientificName as Taxa,PctCover_TopCanopy as [% cover] 
 FROM CoverData 
 WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
@@ -543,7 +536,7 @@ FigureCounter = FigureCounter + 1
 ```
 
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%.",sep="")}
+```{r,label="Table: Percent foliar cover", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
@@ -581,7 +574,7 @@ knitr::kable(FoliarCover,digits=0)
 
 \*Unweighted by ecotype area.
 
-```{r, label="Basal cover figure",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Basal percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
+```{r, label="Figure: Basal percent cover across all plots", all plots",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Basal percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
 BasalCover = sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
 FROM CoverData 
 WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
@@ -602,7 +595,7 @@ ggplot(BasalCover) +
 FigureCounter = FigureCounter + 1
 ```
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")}
+```{r, label="Table: Percent basal cover by taxa", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent basal cover by taxa in the range of the Chisana caribou herd having cover greater than 0.1%.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
@@ -618,7 +611,7 @@ NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "W
 Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any species of lichens in their lichen height measument at each point intercept ("We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present").
 
 
-```{r, echo=FALSE}
+```{r,label="Dataset: Generate Biomass dataset", echo=FALSE}
 
 # Get the lichen thickness and biomass data
 Sql="SELECT Ecotype
@@ -666,8 +659,6 @@ Biomass = sqldf(Sql)
 
 ```
 
-Tests of normality
-
 ```{r,label="Lichen height: Normality plots"}
 
 # Binwidth <- (max(Dataset_VegData$LichenHeight,na.rm=TRUE) - min(Dataset_VegData$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Dataset_VegData %>% filter(is.na(LichenHeight)==FALSE))) )
@@ -688,23 +679,17 @@ Tests of normality
 
 ```
 
-
 ```{r,label="Lichen height: ANOVA of LichenHeight ~ Ecotype"}
 # print('ANOVA: LichenHeight ~ Ecotype')
-# # Perform the ANOVA 
-# Dataset_VegData$Ecotype = gsub("-","/",Ecotypes$Ecotype)
+# # Perform the ANOVA
+# #Dataset_VegData$Ecotype = gsub("-","/",Ecotypes$Ecotype)
 # anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData)
-# anova_result
-# Tukey = TukeyHSD(anova_result) 
-# 
-# tukey_df = as.data.frame(Tukey$Ecotype)
-# tukey_df$comparison = rownames(tukey_df)
-# rownames(tukey_df) <- NULL
-# 
-# ColumnNames = colnames(tukey_df)
+# summary(anova_result)
+# TukeyHSD(anova_result)
+
 ```
 
-```{r,label="Create mean lichen height by plot dataset"}
+```{r,label="Dataset: Generate mean lichen height by plot dataset"}
 
 # Moen et al. (2007) lichen thickness to biomass conversion
 LichenHtToBiomassConversionFactor = 1135.6 
@@ -723,8 +708,6 @@ MeanLichenHeightByPlot = Dataset_VegData %>% select(Ecotype,Plot,Line,PointLoc,L
     ,`SD (biomass)`=              sd(LichenHeight * LichenHtToBiomassConversionFactor,na.rm=TRUE)
   ) %>%
   arrange(Plot)
-
-
 
 # Join the results to the Plots table in order by add the Ecotype back in so we can calculate statistics by ecotype
 MeanLichenHeightByPlot = inner_join(MeanLichenHeightByPlot,Plots,by='Plot') %>% select(Ecotype,Plot,Plots,Transects,NonNullLichenHeights,`Mean lichen thickness (cm)`,`SD (thickness)`,`Estimated biomass (kg/ha)`,`SD (biomass)`)
@@ -749,7 +732,7 @@ MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>%
 
 ### Lichen Thickness and Biomass by Ecotype
 
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007). Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+```{r,label="Figure: Mean lichen thickness and estimated biomass by ecotype", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007). Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
 ggplot(MeanLichenHeightByEcotype) +
   # Mean lichen height column chart
@@ -774,7 +757,7 @@ FigureCounter=FigureCounter+1
 
 
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
+```{r,label="Table: Mean lichen thickness (cm) by ecotype", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
 
 # Output the lichen thickness by ecotype
 knitr::kable(MeanLichenHeightByEcotype %>% rename(SD=`SD (thickness)`) %>% select(Ecotype,Plots,Transects,`Mean lichen thickness (cm)`,SD,n), digits = 2)
@@ -784,7 +767,7 @@ TableCounter = TableCounter + 1
 
 ```
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean estimated lichen biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007) Note that only one plot was sampled in the Forest ecotype..",sep="")}
+```{r,label="Table: Estimated biomass by Ecotype", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean estimated lichen biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007) Note that only one plot was sampled in the Forest ecotype..",sep="")}
 
 # Output the lichen estimated biomass by ecotype
 knitr::kable(MeanLichenHeightByEcotype %>% rename(SD=`SD (biomass)`) %>% select(Ecotype,Plots,Transects,`Estimated biomass (kg/ha)`,SD,n), digits = 2)
@@ -795,7 +778,7 @@ TableCounter = TableCounter + 1
 
 ```
 
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by plot Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
+```{r,label="Figure: Mean lichen thickness by plot", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) by plot Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
 ggplot(MeanLichenHeightByPlot) +
   # Mean lichen height column chart
@@ -819,7 +802,7 @@ FigureCounter=FigureCounter+1
 
 Each plot had 3 litter type and depth observations. This section assembles a list of all litter types encountered from the N,SE, and SW transects and counts how many observations there were for each to get at a percent of total litter observations per litter type.
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Litter dominance (count of transects by litter type divided by total number of transects.",sep="")}
+```{r,label="Table: Litter dominance by transect", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Litter dominance (count of transects by litter type divided by total number of transects.",sep="")}
 
 # Get a list of unique LitterTypes among the N,SE and SW transects so that we can count up how many observations there were for each litter type
 UniqueLitterTypes = sqldf("SELECT DISTINCT NTransectLitterType As LitterType FROM Plots 
@@ -903,20 +886,20 @@ EcoPref = read.csv(EcoPrefPath,header=TRUE)
 
 ### Ecotype preference
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype.",sep="")}
+```{r,label="Table: Ecotype preference of Chisana caribou", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
 Sql = "SELECT Ecotype
-,Count(*) as [GPS Fixes] 
+,Count(*) as [GPS fixes] 
 ,(SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') as TotalFixes
-,Cast(Count(*) As Float) / (SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') * 100 as [Percent of GPS fixes]
+,Cast(Count(*) As Float) / (SELECT Count(*) FROM EcoPref WHERE Ecotype IS NOT NULL and NOT Ecotype = '') * 100 as [Percent of total]
 FROM EcoPref
 WHERE Ecotype IS NOT NULL and NOT Ecotype = ''
 GROUP BY Ecotype 
 ORDER By Count(*) DESC"
 PercentOfFixesByEcotype = sqldf(Sql)
-knitr::kable(PercentOfFixesByEcotype %>% select(Ecotype,`GPS Fixes`,`Percent of GPS fixes`),digits=0)
+knitr::kable(PercentOfFixesByEcotype %>% select(Ecotype,`GPS fixes`,`Percent of total`),digits=0)
 
 # Get the total number of GPS fixes into a parameter that can be used in the text
 TotalGPSFixes = PercentOfFixesByEcotype[1,'TotalFixes']
@@ -927,7 +910,7 @@ Total GPS fixes = `r TotalGPSFixes`
 
 ### Ecotype Preference By Month
 
-```{r, echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Chisana caribou ecotype preference by month as determined from GPS collar data.",sep="")}
+```{r,label="Figure: Caribou seasonal ecotype preference", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Caribou seasonal ecotype preference.",sep="")}
 # By Month
 Sql = "SELECT Month, Ecotype,Count(*) as [GPS Fixes]
 FROM EcoPref
@@ -939,10 +922,8 @@ EcoPrefByMonth = sqldf(Sql)
 # Break out the GPS fixes by month to see how the caribou spend their time seasonally
 ggplot(EcoPrefByMonth) +
   geom_col(aes(x=Month,y=`GPS Fixes`,fill=Ecotype),position="fill") +
-  ggtitle("Chisana caribou ecotype preference by month") +
+  ggtitle("Caribou seasonal ecotype preference") +
   theme_minimal() +
-  # Make X axis labels vertical
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
   scale_x_continuous(breaks = seq(1, 12, by = 1)) 
 
 ```
