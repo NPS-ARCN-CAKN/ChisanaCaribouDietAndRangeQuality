@@ -5,7 +5,7 @@ date: ""
 output:
   html_document:
     toc: true
-    toc_depth: 4
+    toc_depth: 6
     toc_float: true
 ---
 
@@ -418,19 +418,15 @@ where T is mean lichen mat thickness (cm).
 
 ## Litter Depth and Composition
 
-Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss.
+Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus of each transect. Our litter depth measurements include the height of any living mat-forming vegetation, such as moss. We calculated an average litter depth from each plot's three transects.
 
 ## Fecal Pellet Analysis
 
-We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab
-
-## Statistical Software
-
-R (R Core Team, 2024) and R Studio software (Posit team, 2024) was used for all analyses.
+We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab. 
 
 # Caribou Ecotype Preference
 
-I performed a spatial join of the GPS collar data over the major ecotypes to see where caribou were spending their time. I used the 'Join Attributes by Location' tool in QGIS to add the ecotype to each GPS fix. I then summarized the number of pings by ecotype.
+WRST has spatial locations for Chisana caribou from GPS collars from April, 2020 through September, 2024. Using Geographic Inoformation Systems (GIS), we overlaid the caribou location data on our landcover GIS layer and appended the ecotype bounding each location as an attribute to each GPS fix. We then summed the number of locations encompassed by each ecotype, telling us the proportion of time each caribou spent in each ecotype.
 
 # Results
 
@@ -535,7 +531,6 @@ ggplot(FoliarCover) +
 FigureCounter = FigureCounter + 1
 ```
 
-
 ```{r,label="Table: Percent foliar cover", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Percent foliar cover by taxa in the range of the Chisana caribou herd having cover greater than 1%.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
@@ -574,7 +569,7 @@ knitr::kable(FoliarCover,digits=0)
 
 \*Unweighted by ecotype area.
 
-```{r, label="Figure: Basal percent cover across all plots", all plots",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Basal percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
+```{r, label="Figure: Basal percent cover across all plots",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Basal percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
 BasalCover = sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
 FROM CoverData 
 WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
@@ -602,6 +597,36 @@ TableCounter = TableCounter + 1
 # Print the basal (SoilSurface stratum) cover.
 knitr::kable(BasalCover,digits=0)
 
+
+
+```
+
+## Vegetation diversity
+
+```{r,label="Table: Overall diversity", echo=FALSE, tab.cap=paste("Table ",TableCounter,". Overall plant diversity.",sep="")}
+DistinctSpecies = 
+sqldf("
+SELECT Distinct TopCanopyScientificName As Taxa FROM Dataset_VegData
+UNION
+SELECT Distinct Lower1ScientificName As Taxa FROM Dataset_VegData
+UNION
+SELECT Distinct Lower2ScientificName As Taxa FROM Dataset_VegData
+UNION
+SELECT Distinct Lower3ScientificName As Taxa FROM Dataset_VegData
+UNION
+SELECT Distinct SoilSurfaceScientificName As Taxa FROM Dataset_VegData
+")
+
+Diversity = sqldf("SELECT d.Taxa,s.Family,s.Genus,s.CommonName As [Common name],LifeForm as [Life form],GrowthHabit as [Growth habit],GrowthHabitSub as [Sub-growth habit] FROM DistinctSpecies d Inner Join SpeciesList s on d.Taxa = s.ScientificName
+WHERE 
+(GrowthHabitSub <> 'Abiotic') And
+(Family IS NOT NULL) And
+(Family <> '')
+ORDER BY Taxa")
+
+knitr::kable(Diversity)
+
+TableCounter = TableCounter + 1
 ```
 
 ## Lichen Layer Thickness and Biomass
@@ -609,7 +634,6 @@ knitr::kable(BasalCover,digits=0)
 NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "We estimated lichen biomass for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species as B=1135.6T where T is mean lichen mat thickness (cm) and B is mean lichen mat biomass (kg/ha). ,1135.6 \* AVG(IFNULL(v.LichenHeight,0)) as [Estimated lichen biomass (kg/ha)" without really knowing much about that methodology.
 
 Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any species of lichens in their lichen height measument at each point intercept ("We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present").
-
 
 ```{r,label="Dataset: Generate Biomass dataset", echo=FALSE}
 
@@ -646,7 +670,6 @@ ORDER BY [Mean lichen thickness (cm)]  DESC"
 Biomass = sqldf(Sql)
 
 ```
-
 
 ```{r,label="LichenHeight descriptive statistics"}
 
@@ -751,11 +774,6 @@ ggplot(MeanLichenHeightByEcotype) +
 FigureCounter=FigureCounter+1
 
 ```
-
-
-
-
-
 
 ```{r,label="Table: Mean lichen thickness (cm) by ecotype", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Mean lichen thickness (cm) by ecotype.  Note that only one plot was sampled in the Forest ecotype..",sep="")}
 
@@ -882,9 +900,29 @@ TotalTransects = LitterType[1,"TotalNumberOfTransects"]
 EcoPrefPath = paste(DeliverablesDirectory,"CV-10 Caribou Ecotype Preference Spatial Data SENSITIVE 2024-11-14.csv",sep="")
 EcoPref = read.csv(EcoPrefPath,header=TRUE)
 # head(EcoPref)
+
+# QC
+# Make the dates real dates
+EcoPref$Date = as.Date(EcoPref$Date)
+
+# Get the earliest and latest GPS dates
+# EcoPref %>% 
+#   #group_by(Caribou) %>% 
+#   summarize(
+#     Earliest=min(Date),
+#     Latest=max(Date),
+#     #Days = as.numeric(difftime(max(Date), min(Date), units = "days")),
+#     #Years = round(Days/365.25,digits=2),
+#   ,Fixes=n()) %>%
+#   arrange(Earliest)
+# Result: 2020-04-13	2024-09-29	13929	
 ```
 
 ### Ecotype preference
+
+
+
+
 
 ```{r,label="Table: Ecotype preference of Chisana caribou", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype.",sep="")}
 # Increment the table counter
@@ -932,7 +970,7 @@ ggplot(EcoPrefByMonth) +
 
 ### Pellet composition by plant.
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by taxa having percent composition greater than one percent.",sep="")}
+```{r,label="Figure: Fecal pellet composition by taxa", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by taxa having percent composition greater than one percent.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
@@ -960,7 +998,7 @@ Total records = `r TotalPelletDataObservations`.
 
 ### Pellet percent composition by plant form.
 
-```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
+```{r,label="Figure: Fecal pellet composition by plant form", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
@@ -1048,8 +1086,6 @@ ggplot(Plots) +
   xlab("Plot")
 
 ```
-
-
 
 # Appendix B: Vegetation Summary By Ecotype
 
