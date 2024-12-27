@@ -24,6 +24,7 @@ library(ggspatial)
 library(sf)
 library(corrplot)
 library(psych)
+library(reshape2)
 
 # Paths to CAKN drive data and Data Store Project Reference
 # J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment
@@ -44,14 +45,14 @@ FigureCounter = 5
 # This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
 
 # Database connection 
-connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna_dev", Database = "ChisanaVegetation")
+connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna", Database = "ChisanaVegetation")
 
 
 # Function to Write a data frame to a file in the deliverables directory. This will be used as data is pulled from the database and written to files for archival in Data Store
 WriteDataFrameToFile = function(DataFrame,Filename){
   ExportFile = paste(DeliverablesDirectory,Filename,sep="")
   print(paste("Writing ",ExportFile,"\n",sep=""))
-  #print("FAILED: Writing is temporarily disabled by a comment")
+  print("WARNING: Writing is temporarily disabled by a comment")
   #write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
   #print(paste("Wrote ",ExportFile,"\n",sep=""))
 }
@@ -422,9 +423,9 @@ Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus 
 
 ## Fecal Pellet Analysis
 
-We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab. 
+We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab.
 
-# Caribou Ecotype Preference
+## Caribou Ecotype Preference
 
 WRST has spatial locations for Chisana caribou from GPS collars from April, 2020 through September, 2024. Using Geographic Inoformation Systems (GIS), we overlaid the caribou location data on our landcover GIS layer and appended the ecotype bounding each location as an attribute to each GPS fix. We then summed the number of locations encompassed by each ecotype, telling us the proportion of time each caribou spent in each ecotype.
 
@@ -635,6 +636,9 @@ NOTES on lichen biomass: I'm using LM's conversion of lichen height to biomas "W
 
 Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any species of lichens in their lichen height measument at each point intercept ("We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present").
 
+Mean lichen thickness in all study plots averaged 1.45cm, ranging from no lichen cover to a maximum thickness of 7.5cm. Mean lichen thickness by plot ranged from 0.83cm in the Riverine ecotype (3 plots), to 2.77 in the Forest ecotype (Figure 9, Table 6). The Forest ecotype showed the thickest lichen cover, but consists of only a single plot. Analysis of variance between ecotype and lichen thickness was significant (p=2e-16). Tukey's pairwise honest significance test showed that, except for three pairwise comparisons, ecotypes differed significantly in terms of lichen thickness. Lichen thickness similarity was highest among the Subalpine Wood/Shrub, Alpine Sedge/Dwarf Shrub and Alpine Meadow ecotypes (Figure 11.)
+
+
 ```{r,label="Dataset: Generate Biomass dataset", echo=FALSE}
 
 # Get the lichen thickness and biomass data
@@ -671,16 +675,7 @@ Biomass = sqldf(Sql)
 
 ```
 
-```{r,label="LichenHeight descriptive statistics"}
 
-# Descriptive statistics
-# df = describe(Dataset_VegData$LichenHeight)
-# df <- data.frame(Statistic = rownames(df), df) 
-# rownames(df) <- NULL # Remove row names
-# df[1,1] = ''
-# knitr::kable(t(df))
-
-```
 
 ```{r,label="Lichen height: Normality plots"}
 
@@ -702,15 +697,18 @@ Biomass = sqldf(Sql)
 
 ```
 
-```{r,label="Lichen height: ANOVA of LichenHeight ~ Ecotype"}
-# print('ANOVA: LichenHeight ~ Ecotype')
-# # Perform the ANOVA
-# #Dataset_VegData$Ecotype = gsub("-","/",Ecotypes$Ecotype)
-# anova_result <- aov(LichenHeight ~ Ecotype, data = Dataset_VegData)
-# summary(anova_result)
-# TukeyHSD(anova_result)
-
+```{r,label="Dataset: Generate overall mean lichen height summary",tab.cap=paste("Table ",TableCounter,". Overall lichen thickness (cm) summary, Chisana caribou herd range.",sep="")}
+# Generate a summary of overall lichen thickness
+OverAllLichenThicknessSummary = Dataset_VegData %>% 
+  filter(!is.na(LichenHeight)) %>%
+  summarize(Mean=mean(LichenHeight,na.rm=TRUE),
+            `S.D.`=sd(LichenHeight,na.rm=TRUE),
+            Min=min(LichenHeight,na.rm=TRUE),
+            Max=max(LichenHeight,na.rm=TRUE),
+            n=n())
+knitr::kable(t(OverAllLichenThicknessSummary),digits=2)
 ```
+
 
 ```{r,label="Dataset: Generate mean lichen height by plot dataset"}
 
@@ -751,9 +749,19 @@ MeanLichenHeightByEcotype = MeanLichenHeightByPlot %>% group_by(Ecotype) %>%
     ,n=sum(NonNullLichenHeights)
   )
 
+# Generate a summary of overall lichen thickness
+OverAllLichenThicknessSummary = Dataset_VegData %>% 
+  filter(!is.na(LichenHeight)) %>%
+  summarize(Mean=mean(LichenHeight,na.rm=TRUE),
+            SD=sd(LichenHeight,na.rm=TRUE),
+            Min=min(LichenHeight,na.rm=TRUE),
+            Max=max(LichenHeight,na.rm=TRUE),
+            SD=sd(LichenHeight,na.rm=TRUE),
+            n=n())
+
 ```
 
-### Lichen Thickness and Biomass by Ecotype
+
 
 ```{r,label="Figure: Mean lichen thickness and estimated biomass by ecotype", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007). Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
@@ -815,6 +823,63 @@ ggplot(MeanLichenHeightByPlot) +
 #Increment the figure counter
 FigureCounter=FigureCounter+1
 ```
+
+```{r,label="Lichen height: ANOVA of LichenHeight ~ Ecotype"}
+
+# Get just the lichen thickness data by ecotype into a data frame
+LichenData = Dataset_VegData %>% filter(!is.na(LichenHeight)) %>% select(Ecotype,LichenHeight,Plot,Line,PointLoc) %>%    arrange(Ecotype,LichenHeight)
+# The dash in Ecotype will confuse the tukey results, replace with slash
+LichenData$Ecotype = gsub("-","/",LichenData$Ecotype) 
+
+# Do the anova
+anova_result <- aov(LichenHeight ~ Ecotype,  data = LichenData)
+summary(anova_result)
+
+```
+
+```{r,label="Lichen height: Tukey test",tab.cap=paste("Table ",TableCounter,". Matrix of Tukey's Pairwise honest significance test of lichen thickness by ecotype.",sep="")}
+
+# Do the tukey test to get paired results
+tukey = TukeyHSD(anova_result) #plot(TukeyHSD(anova_result, "Ecotype"))
+tukeydf = as.data.frame(tukey$Ecotype) # Turn the tukey results into a data frame
+tukeydf = cbind(EcotypeCombinations = rownames(tukeydf),tukeydf)# Move the row headers into a column
+rownames(tukeydf) = NULL # Get rid of row headers
+
+# Split the EcotypeCombinations column on -
+tukeydf = tukeydf %>%
+  mutate(EcotypeComparison = EcotypeCombinations) %>% # Copy the EcotypeCombinations column before we split it, otherwise it will disappear
+  mutate(P = round(`p adj`,digits=2)) %>% # Round the p-adj column into a column named P
+  separate(EcotypeCombinations,into=c("Ecotype1","Ecotype2"),sep="-") %>% # Split the EcotypeCombinations column into Ecotype1 and 2
+  mutate(EcotypeComparison = paste(Ecotype1," <-> ",Ecotype2,sep="")) %>%
+  #rename(P = `p adj`)%>% 
+  arrange(diff)
+tukeydf$Sig = ifelse(tukeydf$P < 0.05,"*","") # Make a column to hold asterisks for significant differences between Ecotype1 and 2
+
+
+# Make a matrix of p values
+tukeymatrix = as.data.frame(acast(tukeydf, Ecotype1 ~ Ecotype2, value.var = "P"))
+knitr::kable(tukeymatrix)
+TableCounter = TableCounter + 1
+
+```
+
+```{r,label="Tukey test results plot",fig.cap=paste("Figure ",FigureCounter,". Comparison of Tukey's mean lichen height (cm) between ecotypes.",sep="")}
+# Create a ggplot
+ggplot(tukeydf) +
+  geom_errorbar(aes(y=reorder(EcotypeComparison,-diff),xmin=lwr,xmax=upr),color='gray') +
+  geom_point(aes(y=reorder(EcotypeComparison,-diff),x=diff,size=P,color=Sig)) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_text(aes(y=reorder(EcotypeComparison,-diff),x=diff,label=paste(format(P, nsmall = 3),Sig,sep="")),size=3, nudge_x = 0.3, nudge_y = 0.3) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  ylab("Ecotypes compared") +
+  xlab("Difference in mean lichen thickness (cm)")
+
+# Increment the figure counter
+FigureCounter = FigureCounter + 1
+
+```
+
 
 ## Litter Depth and Composition
 
@@ -919,10 +984,6 @@ EcoPref$Date = as.Date(EcoPref$Date)
 ```
 
 ### Ecotype preference
-
-
-
-
 
 ```{r,label="Table: Ecotype preference of Chisana caribou", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Ecotype preference of Chisana caribou as determined from the number of GPS collar fixes by ecotype.",sep="")}
 # Increment the table counter
