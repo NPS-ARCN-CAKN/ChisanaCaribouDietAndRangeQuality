@@ -25,6 +25,7 @@ library(sf)
 library(corrplot)
 library(psych)
 library(reshape2)
+library(terra)
 
 # Paths to CAKN drive data and Data Store Project Reference
 # J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment
@@ -314,12 +315,6 @@ Figure 1. Defining the core range of the Chisana caribou herd in northeastern WR
 
 Figure 2. Major ecotypes within the Chisana caribou range in northeastern WRST Park and Preserve (Table 1). Map based on ecotype landcover developed by Jorgenson et al. (2008).
 
-![](images/clipboard-2456647939.png)
-
-**RE-DO THIS MAP WITH 2016 SITES**
-
-Figure 3. Vegetation sampling sites in the Chisana caribou herd range. Sites visited in 2015 (green) and proposed for future study years (red) are labeled with site IDs. See Appendix A for the geographic locations of all sites.
-
 ```{r, label="Map of sampling plots", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Map of sampling plots.",sep="")}
 # Increment the figure counter
 FigureCounter = FigureCounter + 1
@@ -341,9 +336,100 @@ leaflet() %>%
 
 ```
 
-![](images/clipboard-3907250847.png)
 
-Fig 4. Plot design schematic showing locations of transects.
+```{r,label="Get spatial data and generate a map", echo = FALSE}
+
+PlotsSDF = st_as_sf(Plots, coords = c("Longitude", "Latitude"), crs = 4326)
+
+bboxdf = sqldf("SELECT Min(Latitude) as MinLat,Max(Latitude) as MaxLat,Min(Longitude) as MinLon,Max(Longitude) as MaxLon FROM Plots")
+
+# Load in the park boundaries geojson file from Data Store
+# Reference URL: https://irma.nps.gov/DataStore/Reference/Profile/2303652
+AK_ParksGeoJSON = "https://irma.nps.gov/DataStore/DownloadFile/704836"
+AK_Parks <- read_sf(AK_ParksGeoJSON,crs=4326)
+
+# Expansion factor to add to bounding box values so there is a little space between the units and the polygons
+expansionFactor = 1.002
+
+# Plot the GSPE data
+ggplot() +
+  # Park boundary
+  geom_sf(data=AK_Parks,fill='gray90',color="black",alpha=1) + # Park boundaries
+  geom_sf(data = PlotsSDF) +
+
+  # Label the units with the number of moose observed
+  #geom_text(data = UnitsWithMooseSpatialDF, mapping = aes(x = Longitude, y = Latitude, label = Moose), size = 3, color = "black") +
+
+  # Limit the map to the area around the survey units
+  coord_sf(xlim = c(bboxdf$MinLon, bboxdf$MaxLon),ylim = c(bboxdf$MinLat,bboxdf$MaxLat),expand=TRUE) + # Limit to bounding box of surveyed
+
+  ggtitle("PlotTitle") +
+
+  theme_minimal() + # Minimal theme
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),  # Background color of the panel
+    plot.background = element_rect(fill = "white", color = NA),       # Background color of the plot
+    panel.grid.major = element_line(color = "black"),                # Major grid lines
+    panel.grid.minor = element_line(color = "black")                 # Minor grid lines
+  )
+
+
+```
+
+```{r}
+
+# Define the WMS URL
+wms_url <- "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export"
+
+# Parameters for the WMS request
+params <- list(
+  bbox = "-150,60,-130,63",  # Bounding box coordinates (minx, miny, maxx, maxy)
+  size = "800,600",         # Image size (width,height)
+  format = "png",           # Image format
+  f = "image",              # Response format
+  layers = "0",             # Layer to include
+  bboxSR = "4326",          # Spatial reference of the bounding box
+  imageSR = "4326"          # Spatial reference of the image
+)
+
+# Construct the full URL with parameters
+full_url <- paste0(wms_url, "?", paste0(names(params), "=", params, collapse = "&"))
+
+# Set your download directory (e.g., Desktop)
+download_dir <- "C:/Temp"
+
+# Define the full path to save the raster
+temp_file <- file.path(download_dir, "usgs_topo.png")
+
+# Download the WMS data
+download.file(url = full_url, destfile = temp_file, mode = "wb")
+
+# Check if the file exists
+if (file.exists(temp_file)) {
+  message("File downloaded successfully to ", temp_file)
+} else {
+  stop("Error: File download failed.")
+}
+
+# Read the raster data using terra
+raster_data <- rast(temp_file)
+
+# Convert the raster to a data frame
+raster_df <- as.data.frame(raster_data, xy = TRUE, na.rm = TRUE)
+
+# Create a ggplot with the raster data
+ggplot() +
+  geom_raster(data = raster_df, aes(x = x, y = y, fill = usgs_topo)) +
+  scale_fill_viridis_c() +
+  #coord_quickmap() +
+    # Limit the map to the area around the survey units
+  coord_sf(xlim = c(bboxdf$MinLon, bboxdf$MaxLon),ylim = c(bboxdf$MinLat,bboxdf$MaxLat),expand=TRUE) + # Limit to bounding box of surveyed
+  theme_minimal() +
+  labs(title = "USGS Topo WMS Raster Plot")
+
+
+```
+
 
 ## Ecotypes
 
@@ -409,6 +495,10 @@ We recorded vegetation along three 20 m-long transects oriented at 0, 120, and 2
 
 **Following the methods recommended by Elzinga et al. (1998), we sequentially sampled percent cover values to test for a stable estimate of the overall population mean and standard deviation. We additionally used two-tailed significance tests to determine the necessary sample size for estimating percent cover for a single population and for detecting differences in percent cover between two time periods.**
 
+![](images/clipboard-3907250847.png)
+
+Fig 4. Plot design schematic showing locations of transects.
+
 ## Lichen Thickness and Estimated Biomass
 
 Lichen height was measured using a 3 mm-wide metal skewer inserted into the base of the lichen mat (Arseneault et al., 1997; Moen et al. 2007; Collins et al., 2010) at each of the 40 vegetation intercept points per transect. We calculated the mean lichen height of each plot as the average of all heights, including zero heights where no lichen was present. We estimated lichen biomass (kg/ha) for each plot from mean lichen height using the Moen et al. (2007) regression based on four forage lichen species:
@@ -423,7 +513,13 @@ Litter depth was sampled from 10 cm-diameter soil plugs removed at the terminus 
 
 ## Fecal Pellet Analysis
 
-We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab.
+We collected 34 fecal pellets in the winters of 2015 and 2016 for diet analysis (Table `r TableCounter`). We sent these samples to [NEED THE LAB HERE] for plant composition analysis.
+
+```{r, echo=FALSE,tab.cap=paste("Table ",TableCounter,". Number of pellets collected by year and month.",sep=""),warning=FALSE}
+knitr::kable(PelletData %>% group_by(Year,Month) %>% summarise(n=n_distinct(Sample)) %>% arrange(Year,Month))
+```
+
+We collected 34 fecal pellets from the range of the Chisana caribou herd in in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab.
 
 ## Caribou Ecotype Preference
 
@@ -638,7 +734,6 @@ Also Moen et al. considered 4 leafy lichens. LM and JP did not distinguish any s
 
 Mean lichen thickness in all study plots averaged 1.45cm, ranging from no lichen cover to a maximum thickness of 7.5cm. Mean lichen thickness by plot ranged from 0.83cm in the Riverine ecotype (3 plots), to 2.77 in the Forest ecotype (Figure 9, Table 6). The Forest ecotype showed the thickest lichen cover, but consists of only a single plot. Analysis of variance between ecotype and lichen thickness was significant (p=2e-16). Tukey's pairwise honest significance test showed that, except for three pairwise comparisons, ecotypes differed significantly in terms of lichen thickness. Lichen thickness similarity was highest among the Subalpine Wood/Shrub, Alpine Sedge/Dwarf Shrub and Alpine Meadow ecotypes (Figure 11.)
 
-
 ```{r,label="Dataset: Generate Biomass dataset", echo=FALSE}
 
 # Get the lichen thickness and biomass data
@@ -675,8 +770,6 @@ Biomass = sqldf(Sql)
 
 ```
 
-
-
 ```{r,label="Lichen height: Normality plots"}
 
 # Binwidth <- (max(Dataset_VegData$LichenHeight,na.rm=TRUE) - min(Dataset_VegData$LichenHeight,na.rm=TRUE)) / ceiling(log2(nrow(Dataset_VegData %>% filter(is.na(LichenHeight)==FALSE))) )
@@ -708,7 +801,6 @@ OverAllLichenThicknessSummary = Dataset_VegData %>%
             n=n())
 knitr::kable(t(OverAllLichenThicknessSummary),digits=2)
 ```
-
 
 ```{r,label="Dataset: Generate mean lichen height by plot dataset"}
 
@@ -760,8 +852,6 @@ OverAllLichenThicknessSummary = Dataset_VegData %>%
             n=n())
 
 ```
-
-
 
 ```{r,label="Figure: Mean lichen thickness and estimated biomass by ecotype", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Mean lichen thickness (cm) and estimated biomass (kg/Ha) by ecotype. Biomass estimated according to Moen et al.,(2007). Error bars represent one standard deviation. Note that only one plot was sampled in the Forest ecotype.",sep="")}
 
@@ -848,13 +938,16 @@ rownames(tukeydf) = NULL # Get rid of row headers
 # Split the EcotypeCombinations column on -
 tukeydf = tukeydf %>%
   mutate(EcotypeComparison = EcotypeCombinations) %>% # Copy the EcotypeCombinations column before we split it, otherwise it will disappear
-  mutate(P = round(`p adj`,digits=2)) %>% # Round the p-adj column into a column named P
+  mutate(P = round(`p adj`,digits=3)) %>% # Round the p-adj column into a column named P
   separate(EcotypeCombinations,into=c("Ecotype1","Ecotype2"),sep="-") %>% # Split the EcotypeCombinations column into Ecotype1 and 2
   mutate(EcotypeComparison = paste(Ecotype1," <-> ",Ecotype2,sep="")) %>%
-  #rename(P = `p adj`)%>% 
   arrange(diff)
-tukeydf$Sig = ifelse(tukeydf$P < 0.05,"*","") # Make a column to hold asterisks for significant differences between Ecotype1 and 2
 
+# Make a column to hold asterisks for significant differences between Ecotype1 and 2
+tukeydf$Sig = ""
+tukeydf$Sig[tukeydf$`p adj` < 0.05] <- "*" 
+tukeydf$Sig[tukeydf$`p adj` < 0.01] <- "**" 
+tukeydf$Sig[tukeydf$`p adj` < 0.001] <- "***" 
 
 # Make a matrix of p values
 tukeymatrix = as.data.frame(acast(tukeydf, Ecotype1 ~ Ecotype2, value.var = "P"))
@@ -863,23 +956,55 @@ TableCounter = TableCounter + 1
 
 ```
 
-```{r,label="Tukey test results plot",fig.cap=paste("Figure ",FigureCounter,". Comparison of Tukey's mean lichen height (cm) between ecotypes.",sep="")}
+```{r,label="Tukey test results plot",fig.cap=paste("Figure ",FigureCounter,". Comparison of Tukey's mean lichen height (cm) between ecotypes. Red points indicate no significant difference in lichen height at the 95% confidence level. The size of the point indicating probability of a difference. Mean lichen thickness between ecotypes increases toward the top and bottom of the plot while most similar ecotypes tend toward the middle.",sep=""),warning=FALSE}
+
 # Create a ggplot
 ggplot(tukeydf) +
-  geom_errorbar(aes(y=reorder(EcotypeComparison,-diff),xmin=lwr,xmax=upr),color='gray') +
-  geom_point(aes(y=reorder(EcotypeComparison,-diff),x=diff,size=P,color=Sig)) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_text(aes(y=reorder(EcotypeComparison,-diff),x=diff,label=paste(format(P, nsmall = 3),Sig,sep="")),size=3, nudge_x = 0.3, nudge_y = 0.3) +
+  geom_errorbar(aes(y=reorder(EcotypeComparison,-diff),xmin=lwr,xmax=upr),color='gray60') +
+  geom_point(aes(y=reorder(EcotypeComparison,-diff),x=diff,shape=Sig)) +
+  #labs(shape='Significance') +
+  scale_shape_manual( 
+    name = "Significance", 
+    values = c("NS" = 16, "*" = 17, "**" = 18, "***" = 19), # Adjust shapes as needed 
+    labels = c("NS" = "Not Significant", "*" = "p < 0.05", "**" = "p < 0.01", "***" = "p < 0.001") ) +
+  geom_vline(xintercept = 0, linetype = "dashed",color='gray70') +
+  geom_text(aes(y=reorder(EcotypeComparison,-diff),x=diff,label=paste(round(diff,digits=2),"cm, (p=",format(P, nsmall = 2),")",Sig,sep="")),size=3, nudge_x = 2, nudge_y = 0) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
   ylab("Ecotypes compared") +
-  xlab("Difference in mean lichen thickness (cm)")
+  xlab("Difference in mean lichen thickness (cm)") +
+  xlim(-3,4.6) + 
+  theme(legend.position = "bottom") +
+  ggtitle("Comparison of mean lichen thickness\nbetween ecotypes")
 
 # Increment the figure counter
 FigureCounter = FigureCounter + 1
-
 ```
 
+```{r}
+
+# Create a sample data frame
+df <- data.frame(
+  x = c(1, 2, 3, 4, 5),
+  y = c(3, 7, 4, 5, 6),
+  group = c("A", "B", "A", "B", "A")
+)
+
+# Create a scatter plot and change the legend values using scale_color_manual()
+ggplot(df, aes(x = x, y = y, color = group)) +
+  geom_point(size = 5) +
+  scale_color_manual(
+    name = "Group",  # Change the legend title
+    labels = c("Group A", "Group B"),  # Change the legend labels
+    values = c("A" = "red", "B" = "blue")  # Specify colors for the groups
+  ) +
+  labs(title = "Scatter Plot with Custom Legend Labels",
+       x = "X Axis",
+       y = "Y Axis") +
+  theme_minimal()
+
+
+```
 
 ## Litter Depth and Composition
 
@@ -1031,6 +1156,8 @@ ggplot(EcoPrefByMonth) +
 
 ### Pellet composition by plant.
 
+34 pellets total
+
 ```{r,label="Figure: Fecal pellet composition by taxa", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by taxa having percent composition greater than one percent.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
@@ -1059,26 +1186,31 @@ Total records = `r TotalPelletDataObservations`.
 
 ### Pellet percent composition by plant form.
 
-```{r,label="Figure: Fecal pellet composition by plant form", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
+```{r,label="Table: Fecal pellet composition by plant form", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
 # Increment the table counter
 TableCounter = TableCounter + 1
 
-Sql = "SELECT Form,Avg(PctComposition) as [Mean % composition],Count(*) as n 
-FROM PelletData 
-GROUP BY Form 
-ORDER BY Avg(PctComposition) DESC"
+# Calculate the mean pellet composition by form
+PelletCompositionSummaryByForm = PelletData %>% group_by(Sample,Form) %>% summarise(Sum=sum(PctComposition)) %>% arrange(Sample,desc(Sum)) %>%
+ group_by(Form) %>%  summarize(Mean=mean(Sum),S.D.=sd(Sum),n=n()) %>% arrange(desc(Mean))
 
-PelletCompositionSummary = sqldf(Sql)
-knitr::kable(PelletCompositionSummary,digits=1)
-
-ggplot(data=PelletCompositionSummary) +
-  geom_col(aes(x=reorder(Form,-`Mean % composition`),y=`Mean % composition`)) +
-  theme_minimal() +
-  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-  xlab("Taxa") +
-  ylab("Mean % composition")
+# Output the mean composition by form table
+knitr::kable(PelletCompositionSummaryByForm,digits=1)
 
 TotalPelletDataObservations = nrow(PelletCompositionSummary)
+
+```
+
+```{r,label="Figure: Fecal pellet composition by plant form", echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Fecal pellet composition by plant form.",sep="")}
+
+ggplot(data=PelletCompositionSummaryByForm) +
+  geom_col(aes(x=reorder(Form,-Mean),y=Mean)) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  xlab("Plant form") +
+  ylab("Mean % composition")
+
+FigureCounter = FigureCounter + 1
 
 ```
 
