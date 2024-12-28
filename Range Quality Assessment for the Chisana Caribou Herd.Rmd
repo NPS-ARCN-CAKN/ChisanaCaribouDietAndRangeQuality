@@ -338,94 +338,94 @@ leaflet() %>%
 
 
 ```{r,label="Get spatial data and generate a map", echo = FALSE}
-
-PlotsSDF = st_as_sf(Plots, coords = c("Longitude", "Latitude"), crs = 4326)
-
-bboxdf = sqldf("SELECT Min(Latitude) as MinLat,Max(Latitude) as MaxLat,Min(Longitude) as MinLon,Max(Longitude) as MaxLon FROM Plots")
-
-# Load in the park boundaries geojson file from Data Store
-# Reference URL: https://irma.nps.gov/DataStore/Reference/Profile/2303652
-AK_ParksGeoJSON = "https://irma.nps.gov/DataStore/DownloadFile/704836"
-AK_Parks <- read_sf(AK_ParksGeoJSON,crs=4326)
-
-# Expansion factor to add to bounding box values so there is a little space between the units and the polygons
-expansionFactor = 1.002
-
-# Plot the GSPE data
-ggplot() +
-  # Park boundary
-  geom_sf(data=AK_Parks,fill='gray90',color="black",alpha=1) + # Park boundaries
-  geom_sf(data = PlotsSDF) +
-
-  # Label the units with the number of moose observed
-  #geom_text(data = UnitsWithMooseSpatialDF, mapping = aes(x = Longitude, y = Latitude, label = Moose), size = 3, color = "black") +
-
-  # Limit the map to the area around the survey units
-  coord_sf(xlim = c(bboxdf$MinLon, bboxdf$MaxLon),ylim = c(bboxdf$MinLat,bboxdf$MaxLat),expand=TRUE) + # Limit to bounding box of surveyed
-
-  ggtitle("PlotTitle") +
-
-  theme_minimal() + # Minimal theme
-  theme(
-    panel.background = element_rect(fill = "white", color = NA),  # Background color of the panel
-    plot.background = element_rect(fill = "white", color = NA),       # Background color of the plot
-    panel.grid.major = element_line(color = "black"),                # Major grid lines
-    panel.grid.minor = element_line(color = "black")                 # Minor grid lines
-  )
+# 
+# PlotsSDF = st_as_sf(Plots, coords = c("Longitude", "Latitude"), crs = 4326)
+# 
+# bboxdf = sqldf("SELECT Min(Latitude) as MinLat,Max(Latitude) as MaxLat,Min(Longitude) as MinLon,Max(Longitude) as MaxLon FROM Plots")
+# 
+# # Load in the park boundaries geojson file from Data Store
+# # Reference URL: https://irma.nps.gov/DataStore/Reference/Profile/2303652
+# AK_ParksGeoJSON = "https://irma.nps.gov/DataStore/DownloadFile/704836"
+# AK_Parks <- read_sf(AK_ParksGeoJSON,crs=4326)
+# 
+# # Expansion factor to add to bounding box values so there is a little space between the units and the polygons
+# expansionFactor = 1.002
+# 
+# # Plot the GSPE data
+# ggplot() +
+#   # Park boundary
+#   geom_sf(data=AK_Parks,fill='gray90',color="black",alpha=1) + # Park boundaries
+#   geom_sf(data = PlotsSDF) +
+# 
+#   # Label the units with the number of moose observed
+#   #geom_text(data = UnitsWithMooseSpatialDF, mapping = aes(x = Longitude, y = Latitude, label = Moose), size = 3, color = "black") +
+# 
+#   # Limit the map to the area around the survey units
+#   coord_sf(xlim = c(bboxdf$MinLon, bboxdf$MaxLon),ylim = c(bboxdf$MinLat,bboxdf$MaxLat),expand=TRUE) + # Limit to bounding box of surveyed
+# 
+#   ggtitle("PlotTitle") +
+# 
+#   theme_minimal() + # Minimal theme
+#   theme(
+#     panel.background = element_rect(fill = "white", color = NA),  # Background color of the panel
+#     plot.background = element_rect(fill = "white", color = NA),       # Background color of the plot
+#     panel.grid.major = element_line(color = "black"),                # Major grid lines
+#     panel.grid.minor = element_line(color = "black")                 # Minor grid lines
+#   )
 
 
 ```
 
 ```{r}
 
-# Define the WMS URL
-wms_url <- "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export"
-
-# Parameters for the WMS request
-params <- list(
-  bbox = "-150,60,-130,63",  # Bounding box coordinates (minx, miny, maxx, maxy)
-  size = "800,600",         # Image size (width,height)
-  format = "png",           # Image format
-  f = "image",              # Response format
-  layers = "0",             # Layer to include
-  bboxSR = "4326",          # Spatial reference of the bounding box
-  imageSR = "4326"          # Spatial reference of the image
-)
-
-# Construct the full URL with parameters
-full_url <- paste0(wms_url, "?", paste0(names(params), "=", params, collapse = "&"))
-
-# Set your download directory (e.g., Desktop)
-download_dir <- "C:/Temp"
-
-# Define the full path to save the raster
-temp_file <- file.path(download_dir, "usgs_topo.png")
-
-# Download the WMS data
-download.file(url = full_url, destfile = temp_file, mode = "wb")
-
-# Check if the file exists
-if (file.exists(temp_file)) {
-  message("File downloaded successfully to ", temp_file)
-} else {
-  stop("Error: File download failed.")
-}
-
-# Read the raster data using terra
-raster_data <- rast(temp_file)
-
-# Convert the raster to a data frame
-raster_df <- as.data.frame(raster_data, xy = TRUE, na.rm = TRUE)
-
-# Create a ggplot with the raster data
-ggplot() +
-  geom_raster(data = raster_df, aes(x = x, y = y, fill = usgs_topo)) +
-  scale_fill_viridis_c() +
-  #coord_quickmap() +
-    # Limit the map to the area around the survey units
-  coord_sf(xlim = c(bboxdf$MinLon, bboxdf$MaxLon),ylim = c(bboxdf$MinLat,bboxdf$MaxLat),expand=TRUE) + # Limit to bounding box of surveyed
-  theme_minimal() +
-  labs(title = "USGS Topo WMS Raster Plot")
+# # Define the WMS URL
+# wms_url <- "https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/export"
+# 
+# # Parameters for the WMS request
+# params <- list(
+#   bbox = "-150,60,-130,63",  # Bounding box coordinates (minx, miny, maxx, maxy)
+#   size = "800,600",         # Image size (width,height)
+#   format = "png",           # Image format
+#   f = "image",              # Response format
+#   layers = "0",             # Layer to include
+#   bboxSR = "4326",          # Spatial reference of the bounding box
+#   imageSR = "4326"          # Spatial reference of the image
+# )
+# 
+# # Construct the full URL with parameters
+# full_url <- paste0(wms_url, "?", paste0(names(params), "=", params, collapse = "&"))
+# 
+# # Set your download directory (e.g., Desktop)
+# download_dir <- "C:/Temp"
+# 
+# # Define the full path to save the raster
+# temp_file <- file.path(download_dir, "usgs_topo.png")
+# 
+# # Download the WMS data
+# download.file(url = full_url, destfile = temp_file, mode = "wb")
+# 
+# # Check if the file exists
+# if (file.exists(temp_file)) {
+#   message("File downloaded successfully to ", temp_file)
+# } else {
+#   stop("Error: File download failed.")
+# }
+# 
+# # Read the raster data using terra
+# raster_data <- rast(temp_file)
+# 
+# # Convert the raster to a data frame
+# raster_df <- as.data.frame(raster_data, xy = TRUE, na.rm = TRUE)
+# 
+# # Create a ggplot with the raster data
+# ggplot() +
+#   geom_raster(data = raster_df, aes(x = x, y = y, fill = usgs_topo)) +
+#   scale_fill_viridis_c() +
+#   #coord_quickmap() +
+#     # Limit the map to the area around the survey units
+#   coord_sf(xlim = c(bboxdf$MinLon, bboxdf$MaxLon),ylim = c(bboxdf$MinLat,bboxdf$MaxLat),expand=TRUE) + # Limit to bounding box of surveyed
+#   theme_minimal() +
+#   labs(title = "USGS Topo WMS Raster Plot")
 
 
 ```
