@@ -336,7 +336,6 @@ leaflet() %>%
 
 ```
 
-
 ```{r,label="Get spatial data and generate a map", echo = FALSE}
 # 
 # PlotsSDF = st_as_sf(Plots, coords = c("Longitude", "Latitude"), crs = 4326)
@@ -429,7 +428,6 @@ leaflet() %>%
 
 
 ```
-
 
 ## Ecotypes
 
@@ -667,12 +665,13 @@ knitr::kable(FoliarCover,digits=0)
 \*Unweighted by ecotype area.
 
 ```{r, label="Figure: Basal percent cover across all plots",echo=FALSE,fig.cap=paste("Figure ",FigureCounter,". Basal percent cover across all sampling plots in the Chisana caribou herd range.",sep="")}
-BasalCover = sqldf("SELECT ScientificName as Taxa,PctCover_SoilSurface as [% cover] 
+BasalCover = sqldf("SELECT ScientificName as Taxa,GrowthHabitSub,PctCover_SoilSurface as [% cover] 
 FROM CoverData 
-WHERE GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic')
-And PctCover_TopCanopy > 1
-AND PctCover_TopCanopy > 0
-ORDER BY PctCover_TopCanopy DESC")
+WHERE 
+--GrowthHabitSub NOT IN ('Moss','Lichen Crust','Abiotic') And 
+PctCover_SoilSurface > 1
+--AND PctCover_SoilSurface > 0
+ORDER BY PctCover_SoilSurface DESC")
 
 ggplot(BasalCover) +
       geom_col(aes(x=reorder(Taxa,-`% cover`),y=`% cover`)) +
@@ -680,7 +679,7 @@ ggplot(BasalCover) +
       xlab("Point intercept") +
       theme_minimal() +
       theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
-      xlab("Taxa") +
+      xlab("Taxa or substrate") +
       ylab("% cover")
 
 # Increment the figure counter
@@ -694,11 +693,11 @@ TableCounter = TableCounter + 1
 # Print the basal (SoilSurface stratum) cover.
 knitr::kable(BasalCover,digits=0)
 
-
-
 ```
 
 ## Vegetation diversity
+
+I'm not sure this goes in a paper, but was easy to do.
 
 ```{r,label="Table: Overall diversity", echo=FALSE, tab.cap=paste("Table ",TableCounter,". Overall plant diversity.",sep="")}
 DistinctSpecies = 
@@ -857,15 +856,14 @@ OverAllLichenThicknessSummary = Dataset_VegData %>%
 
 ggplot(MeanLichenHeightByEcotype) +
   # Mean lichen height column chart
-  geom_col(aes(x=Ecotype,y=`Mean lichen thickness (cm)`),fill='lightgray',color='darkgray') +
-  
+  geom_col(aes(x=reorder(Ecotype,-`Mean lichen thickness (cm)`),y=`Mean lichen thickness (cm)`),fill='gray80',color='gray50') +
   # Error bars as standard deviation
   geom_errorbar(aes(x=Ecotype,ymin=`Mean lichen thickness (cm)` - `SD (thickness)`,ymax=`Mean lichen thickness (cm)` + `SD (thickness)`),width=0.2) +
-  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)`
-                ,label=paste( round(`Mean lichen thickness (cm)`,digits=2)," cm\n(",round(`Estimated biomass (kg/ha)`,digits=2)," kg/Ha)",sep=""))
-    ,size=3,vjust=2.2) +
+  # Label the bars
+  geom_text(aes(x=Ecotype,y=`Mean lichen thickness (cm)`,label=paste( round(`Mean lichen thickness (cm)`,digits=2)," cm\n(",round(`Estimated biomass (kg/ha)`,digits=2)," kg/Ha)",sep="")),size=3,vjust=2.2) +
   theme_minimal() +
   theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  xlab("Ecotype") +
   ggtitle("Mean lichen thickness and estimated biomass by ecotype")
 
 #Increment the figure counter
@@ -981,32 +979,7 @@ ggplot(tukeydf) +
 FigureCounter = FigureCounter + 1
 ```
 
-```{r}
-
-# Create a sample data frame
-df <- data.frame(
-  x = c(1, 2, 3, 4, 5),
-  y = c(3, 7, 4, 5, 6),
-  group = c("A", "B", "A", "B", "A")
-)
-
-# Create a scatter plot and change the legend values using scale_color_manual()
-ggplot(df, aes(x = x, y = y, color = group)) +
-  geom_point(size = 5) +
-  scale_color_manual(
-    name = "Group",  # Change the legend title
-    labels = c("Group A", "Group B"),  # Change the legend labels
-    values = c("A" = "red", "B" = "blue")  # Specify colors for the groups
-  ) +
-  labs(title = "Scatter Plot with Custom Legend Labels",
-       x = "X Axis",
-       y = "Y Axis") +
-  theme_minimal()
-
-
-```
-
-## Litter Depth and Composition
+## Litter Composition and Depth
 
 Each plot had 3 litter type and depth observations. This section assembles a list of all litter types encountered from the N,SE, and SW transects and counts how many observations there were for each to get at a percent of total litter observations per litter type.
 
@@ -1020,20 +993,14 @@ UNION
 SELECT DISTINCT SWTransectLitterType FROM Plots
 ")
 
-
 Sql = "SELECT IFNULL(LitterType,'None') As  [Litter type]
-
--- Uncomment the columns below to see the counts of transects by litter type
 ,(SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.NTransectLitterType,'None') = IFNULL(d.LitterType,'None')) As NTransects
 ,(SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SWTransectLitterType,'None') = IFNULL(d.LitterType,'None')) As SWTransects
 ,(SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SETransectLitterType,'None') = IFNULL(d.LitterType,'None')) As SETransects
-
 , (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.NTransectLitterType,'None') = IFNULL(d.LitterType,'None')) 
 + (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SWTransectLitterType,'None') = IFNULL(d.LitterType,'None'))
 + (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SETransectLitterType,'None') = IFNULL(d.LitterType,'None')) As SumOfTransects
-
 ,(SELECT Count(*) FROM Plots WHERE EstablishDate IS NOT NULL) * 3 As TotalNumberOfTransects
-
 ,CAST((
 	 (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.NTransectLitterType,'None') = IFNULL(d.LitterType,'None')) 
 	+ (SELECT Count(*) FROM Plots p WHERE EstablishDate IS NOT NULL And IFNULL(p.SWTransectLitterType,'None') = IFNULL(d.LitterType,'None'))
@@ -1041,11 +1008,9 @@ Sql = "SELECT IFNULL(LitterType,'None') As  [Litter type]
 	As Float)
 	/ (SELECT Count(*)* 3 FROM Plots WHERE EstablishDate IS NOT NULL) * 100
 	As [% of transects]
-
 FROM UniqueLitterTypes d
 WHERE LitterType <> ''
-ORDER BY [% of transects] DESC,LitterType
-"
+ORDER BY [% of transects] DESC,LitterType"
 
 # Get the litter type counts dataset into a data frame
 LitterType = sqldf(Sql)
@@ -1222,21 +1187,23 @@ Total records = `r TotalPelletDataObservations`.
 
 Foliar cover is dominated by Betula glandulosa 17%, Unknown sedge, 12% Dryas octopetala, 9% and Salix spp. at 8%. Basal cover is overwhelmingly dominated by Moss, 42% Unknown sedges 6%, Cladonia sp. 5% Stereocaulon sp. 4% Cetraria sp. 3% Empetrum nigrum 3% Peltigera sp. 2%
 
-### Lichen Layer Thickness and Biomass
+## Lichen Layer Thickness and Biomass
 
 Lichen layer thickness ranged from 0.83cm in riverine habitats to 1.7cm in the Alpine Sedge-Dwarf Shrub ecotype, excluding the Forest ecotype where we only had one sample with a mean thickness of 2.77 cm.
 
 [It's interesting that caribou seem to avoid Forest ecotype even though it has the most lichen. Possibly deep snow, insects, or predation?]
 
-### Litter Depth and Composition
+## Litter Depth and Composition
 
-### Caribou Ecotype Preference
+Litter depth 
+
+## Caribou Ecotype Preference
 
 Caribou seem to use the Alpine Sedge-Dwarf Shrub ecotype year round and this ecotype showed the thickest lichen layer of all ecotypes except the Forest ecotype.
 
 Caribou show distinct seasonal use of the Alpine Dwarf Shrub/Barrens ecotype, migrating out in the winter and in during the summer. [Insect relief?]
 
-### Fecal Pellet Composition
+## Fecal Pellet Composition
 
 # Appendix A: Sampling Plots
 
@@ -1433,7 +1400,7 @@ GetEcotypeSection = function(Ecotype){
   #   ORDER BY [% cover] DESC",sep="")
   # Cover = sqldf(Sql)
   # 
-  #   # Plot the soil surface cover
+  #   # Plot the Basal cover
   # cat("  \n\n")
   # print(
   #   ggplot(Cover) +
@@ -1459,8 +1426,8 @@ GetEcotypeSection = function(Ecotype){
   
   
   
-  # Dump out the soil surface cover. NOTE: The table below only considers Lower1 intercepts - ignores Lower2 and 3.
-  cat("## Soil Surface Cover  \n\n")
+  # Dump out the Basal cover. NOTE: The table below only considers Lower1 intercepts - ignores Lower2 and 3.
+  cat("## Basal Cover  \n\n")
   cat("  \n\n")
   Sql = paste("SELECT ScientificName,SoilSurfaceIntercepts as Hits,TotalHitsPossible as Opportunities,CAST(PctCover_SoilSurface As Float) As [% cover] 
     FROM CoverDataByEcotype 
@@ -1468,12 +1435,12 @@ GetEcotypeSection = function(Ecotype){
     ORDER BY [% cover] DESC",sep="")
   Cover = sqldf(Sql)
   
-  # Plot the soil surface cover
+  # Plot the Basal cover
   cat("  \n\n")
   print(
     ggplot(Cover) +
       geom_col(aes(x=reorder(ScientificName,-`% cover`),y=`% cover`)) +
-      ggtitle(paste("Soil surface cover: ",Ecotype,sep="")) +
+      ggtitle(paste("Basal cover: ",Ecotype,sep="")) +
       xlab("Point intercept") +
       theme_minimal() +
       theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
@@ -1481,13 +1448,13 @@ GetEcotypeSection = function(Ecotype){
       ylab("% cover")
   )
   cat("  \n\n")
-  cat(" Figure B-3. Soil surface percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
+  cat(" Figure B-3. Basal percent cover in the ",Ecotype," ecotype having percent cover greater than 1%. X-axis taxa may include abiotic strata such as soil, litter or rock where no plant species were intercepted.  \n\n")
     cat("  \n\n")
     FigureCounter = FigureCounter + 1
   
   # Add in a total row and output
   Cover[nrow(Cover) + 1,] = c("TOTAL",sum(Cover$Hits),'',sum(Cover$`% cover`))
-  cat("Table ",TableCounter,". Soil surface cover in the ",Ecotype," ecotype.  \n\n")
+  cat("Table ",TableCounter,". Basal cover in the ",Ecotype," ecotype.  \n\n")
   print(knitr::kable(Cover,digits=1))
   cat("  \n\n")
   TableCounter = TableCounter + 1
@@ -1495,7 +1462,7 @@ GetEcotypeSection = function(Ecotype){
 }
 
 
-# Loop through the ecotypes and generate a report section showing the vegetation composition, foliar, midstory and soil surface, etc.
+# Loop through the ecotypes and generate a report section showing the vegetation composition, foliar, midstory and Basal, etc.
 Samples = sqldf("SELECT Ecotype FROM Ecotypes ORDER BY ECotype")
 for(i in 1:nrow(Samples)) {       
   Ecotype = Ecotypes$Ecotype[i]
