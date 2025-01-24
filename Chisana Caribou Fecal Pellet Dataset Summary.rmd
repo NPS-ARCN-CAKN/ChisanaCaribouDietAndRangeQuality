@@ -1,0 +1,167 @@
+---
+title: ""
+author: ""
+date: ""
+output:
+  html_document:
+    toc: true
+    toc_depth: 6
+    toc_float: true
+---
+
+```{r,label="Setup", include=FALSE, echo=FALSE}
+
+# Global NA to blank
+options(knitr.kable.NA = '')
+knitr::opts_chunk$set(echo = FALSE)
+
+# Libraries
+library(sqldf)
+library(tidyverse)
+library(odbc)
+library(leaflet)
+library(ggspatial)
+library(sf)
+library(corrplot)
+library(psych)
+library(reshape2)
+
+# Paths to CAKN drive data and Data Store Project Reference
+# J:\Monitoring\Caribou\WRST\Projects\Chisana Caribou Habitat Assessment
+# https://irma.nps.gov/DataStore/Reference/Profile/2306144
+
+# Directory where project deliverables are stored (authoritative copies will eventually go in Data Store)
+DeliverablesDirectory = "J:/Monitoring/Caribou/WRST/Projects/Chisana Caribou Habitat Assessment/Data/Deliverables/"
+
+# Initiate table and figure counters
+TableCounter = 2
+# Set the figure counter (Figs 1-4 appear in the introductory material. First R generated figure is 5, so start at 5)
+FigureCounter = 5
+
+```
+
+```{r,label="Pull data from the database and write it to CSV files for archival", echo=FALSE,include=FALSE}
+
+# This code block is not used analytically but rather to get the the data from the database and written to files that can be archived and made available in Data Store. I want the analysis in this report to come from files rather than the database so that the code can easily be reproduced by anybody using files in Data Store rather than the database. The code in this chunk will be commented out entirely once the files are written and is only included to show how the data files were generated.
+
+# Database connection 
+connection = dbConnect(odbc(),Driver = "Sql Server",Server = "inpyugamsvm01\\nuna", Database = "ChisanaVegetation")
+
+
+# Function to Write a data frame to a file in the deliverables directory. This will be used as data is pulled from the database and written to files for archival in Data Store
+WriteDataFrameToFile = function(DataFrame,Filename){
+  ExportFile = paste(DeliverablesDirectory,Filename,sep="")
+  print(paste("Writing ",ExportFile,"\n",sep=""))
+  print("WARNING: Writing is temporarily disabled by a comment")
+  #write.table(DataFrame,file=ExportFile,quote=TRUE,sep=",",na="",row.names = FALSE, col.names = TRUE)
+  #print(paste("Wrote ",ExportFile,"\n",sep=""))
+}
+
+# Write the deliverables schedule to file
+# DeliverablesSchedule = dbGetQuery(connection,"SELECT * FROM DeliverablesSchedule ORDER BY DeliverableID")
+# #Write the deliverables schedule plots to file
+# Filename = paste("C-00 Deliverables Schedule - Chisana Vegetation Project.csv",sep="")
+# WriteDataFrameToFile(DeliverablesSchedule,Filename)
+
+# Write the fecal pellet dataset to file
+# Notes on data processing steps to get to a good pellet dataset:
+# The lab shipped a file to JAP (Putera 34 results.xlsx). The data was good in a pivoted, wide format that was untidy. 
+# I cleaned it (Putera 34 results Copy.xlsx) and reformatted into a long and tidy (2015 Chisana Caribou Fecal Pellet Data.xlsx) format and imported it into the database (inpyugamsvm01\nuna_dev:ChisanaVeg).
+
+# There were also a number of geodatabases containing the pellet collection locations. I merged these into a single file, CP-07 Fecal pellet collections spatial dataset.csv and imported them into the database.
+# From there I joined the fecal composition data with the pellet collection locations joining on Sample and exported a pellet composition dataset with spatial locations for upload to Data Store: CP-05 Chisana Caribou Fecal Pellet Composition Dataset.csv; in the database this dataset is the view Dataset_FecalPellets).
+
+# Get the fecal pellet dataset
+# Sql = "SELECT  Sample, Form, Plant, PctComposition, Date, Year, Month, Lat, Lon, Elevation_m, Comment
+# FROM Dataset_FecalPellets
+# ORDER BY Sample, Form, Plant"
+# PelletData = dbGetQuery(connection,Sql)
+# Filename = paste("CP-05 Fecal pellet dataset.csv",sep="")
+# WriteDataFrameToFile(PelletData,Filename)
+
+```
+
+```{r,label="Load data files from Data Store", echo=FALSE}
+# Load data files
+# Deliverables for this project are on the J drive with the path stored in the DeliverablesDirectory variable.
+# In November 2024 they were moved to NPS Data Store at https://irma.nps.gov/DataStore/Reference/Profile/2306840.
+# File paths to the J drive were commented out and replaced with URLs to Data Store so that NPS personnel can run 
+# this markdown file from anywhere and reproduce the analyses done here.
+
+# Read in the fecal pellet dataset
+#PelletDataPath = paste(DeliverablesDirectory,"CP-05 Fecal pellet dataset.csv",sep="") # Network drive
+PelletDataPath = r'(https://irma.nps.gov/DataStore/DownloadFile/711686)' # Data Store
+PelletData  = read.csv(PelletDataPath,header=TRUE)
+
+```
+
+# Fecal Pellet Dataset, Chisana Caribou Herd, Alaska
+
+Authors, etc.
+
+## Wrangell-St. Elias National Park and Preserve
+
+
+## Fecal Pellet Analysis
+
+We collected fecal pellets from the range of the Chisana caribou herd in order to quantify what plants the Chisana caribou were feeding on. Collected fecal pellets were analyzed for taxa by XXX lab.
+
+
+## Fecal Pellet Composition
+
+### Pellet composition by plant.
+
+```{r,label="Figure: Fecal pellet composition by taxa", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by taxa having percent composition greater than one percent.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+Sql = "SELECT Plant,Avg(PctComposition) as [Mean % composition],Count(*) as n 
+FROM PelletData 
+GROUP BY Plant 
+HAVING Avg(PctComposition) > 1
+ORDER BY Avg(PctComposition) DESC"
+
+PelletCompositionSummary = sqldf(Sql)
+knitr::kable(PelletCompositionSummary,digits=1)
+
+TotalPelletDataObservations = nrow(PelletCompositionSummary)
+
+ggplot(data=PelletCompositionSummary) +
+  geom_col(aes(x=reorder(Plant,-`Mean % composition`),y=`Mean % composition`)) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  xlab("Taxa") +
+  ylab("Mean % composition")
+
+```
+
+Total records = `r TotalPelletDataObservations`.
+
+### Pellet percent composition by plant form.
+
+```{r,label="Figure: Fecal pellet composition by plant form", echo=FALSE,tab.cap=paste("Table ",TableCounter,". Fecal pellet composition by plant form.",sep="")}
+# Increment the table counter
+TableCounter = TableCounter + 1
+
+# Calculate the mean pellet composition by form
+PelletCompositionSummaryByForm = PelletData %>% group_by(Sample,Form) %>% summarise(Sum=sum(PctComposition)) %>% arrange(Sample,desc(Sum)) %>%
+ group_by(Form) %>%  summarize(Mean=mean(Sum),S.D.=sd(Sum),n=n()) %>% arrange(desc(Mean))
+
+# Output the mean composition by form table
+knitr::kable(PelletCompositionSummaryByForm,digits=1)
+
+ggplot(data=PelletCompositionSummaryByForm) +
+  geom_col(aes(x=reorder(Form,-Mean),y=Mean)) +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=90,hjust=1,vjust=0.5)) +
+  xlab("Plant form") +
+  ylab("Mean % composition")
+
+TotalPelletDataObservations = nrow(PelletCompositionSummary)
+
+```
+
+Total records = `r TotalPelletDataObservations`.
+
+# Discussion
+
